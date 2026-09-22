@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financeiro do Brechó</title>
+<meta name="description" content="Controle financeiro do brechó: lançamentos, conciliação bancária, contas a pagar/receber e relatórios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tailwind.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/vendor/chart.umd.min.js"></script>
+</head>
+<body class="bg-beige text-ink antialiased">
+
+<div id="toast-container" class="fixed top-4 right-4 z-[100] flex flex-col gap-2"></div>
+
+<header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-sand/60">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🧵</span>
+      <span class="font-heading font-bold text-lg text-forest-800 tracking-tight">Financeiro do Brechó</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btn-backup" class="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-forest-700 hover:text-forest-800 border border-sand rounded-full px-4 py-2 transition">
+        ⚙️ Backup
+      </button>
+      <button id="btn-menu-mobile" class="sm:hidden text-forest-800 border border-sand rounded-full px-3 py-2">☰</button>
+    </div>
+  </div>
+  <nav id="main-nav" class="max-w-6xl mx-auto px-4 sm:px-6 hidden sm:flex gap-1 pb-2 overflow-x-auto">
+    <button data-view="resumo" class="nav-tab">📊 Resumo</button>
+    <button data-view="lancamentos" class="nav-tab">🧾 Lançamentos</button>
+    <button data-view="conciliacao" class="nav-tab">🔗 Conciliação</button>
+    <button data-view="contas" class="nav-tab">📅 A pagar/receber</button>
+    <button data-view="categorias" class="nav-tab">🏷️ Categorias</button>
+  </nav>
+</header>
+
+<!-- Menu mobile (drawer simples) -->
+<div id="mobile-menu" class="sm:hidden hidden fixed inset-0 z-[45] bg-ink/40" >
+  <div class="bg-cream w-64 h-full p-4 flex flex-col gap-1 shadow-xl">
+    <button data-view="resumo" class="nav-tab-mobile">📊 Resumo</button>
+    <button data-view="lancamentos" class="nav-tab-mobile">🧾 Lançamentos</button>
+    <button data-view="conciliacao" class="nav-tab-mobile">🔗 Conciliação</button>
+    <button data-view="contas" class="nav-tab-mobile">📅 A pagar/receber</button>
+    <button data-view="categorias" class="nav-tab-mobile">🏷️ Categorias</button>
+    <hr class="my-2 border-sand">
+    <button id="btn-backup-mobile" class="nav-tab-mobile">⚙️ Backup</button>
+  </div>
+</div>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+  <div id="view-resumo" class="view"></div>
+  <div id="view-lancamentos" class="view hidden"></div>
+  <div id="view-conciliacao" class="view hidden"></div>
+  <div id="view-contas" class="view hidden"></div>
+  <div id="view-categorias" class="view hidden"></div>
+</main>
+
+<!-- Modal genérico -->
+<div id="modal-backdrop" class="fixed inset-0 bg-ink/50 z-50 hidden items-center justify-center p-4">
+  <div id="modal-content" class="bg-cream rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6"></div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/store.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/views/resumo.js"></script>
+<script src="js/views/lancamentos.js"></script>
+<script src="js/views/conciliacao.js"></script>
+<script src="js/views/contas.js"></script>
+<script src="js/views/categorias.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
