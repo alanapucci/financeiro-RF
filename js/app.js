@@ -2,6 +2,7 @@
 const App = (() => {
   const views = {
     resumo: ViewResumo,
+    anual: ViewAnual,
     lancamentos: ViewLancamentos,
     conciliacao: ViewConciliacao,
     contas: ViewContas,
