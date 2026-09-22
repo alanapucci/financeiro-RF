@@ -102,10 +102,6 @@ const ViewLancamentos = (() => {
     });
   }
 
-  function categoriasPorTipo(state, tipo) {
-    return state.categorias.filter(c => c.tipo === tipo);
-  }
-
   function openForm(lancamento, options) {
     options = options || {};
     const prefill = options.prefill || {};
@@ -170,10 +166,8 @@ const ViewLancamentos = (() => {
 
     function atualizarCategorias() {
       const tipo = document.getElementById('lf-tipo').value;
-      const cats = categoriasPorTipo(state, tipo);
-      document.getElementById('lf-categoria').innerHTML = cats.map(c =>
-        `<option value="${c.id}" ${base.categoriaId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.nome)}</option>`
-      ).join('');
+      const blocos = Store.categoriasAgrupadas(tipo);
+      document.getElementById('lf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(blocos, base.categoriaId);
     }
     atualizarCategorias();
     document.getElementById('lf-tipo').addEventListener('change', atualizarCategorias);

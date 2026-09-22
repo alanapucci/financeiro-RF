@@ -43,18 +43,53 @@ const ViewAnual = (() => {
     `;
   }
 
-  function linhaCategoria(nome, valores, totalAno) {
+  function linhaCategoria(nome, valores, totalAno, indent) {
     return `
       <tr>
-        <td class="pl-8 text-ink/80 sticky left-0 bg-inherit">${Utils.escapeHtml(nome)}</td>
+        <td class="${indent ? 'pl-12' : 'pl-8'} text-ink/80 sticky left-0 bg-inherit">${Utils.escapeHtml(nome)}</td>
         ${valores.map(v => `<td class="text-right">${fmtNum(v)}</td>`).join('')}
         <td class="text-right pr-4">${fmtNum(totalAno)}</td>
       </tr>
     `;
   }
 
+  function linhaGrupo(nome, valores, totalAno) {
+    return `
+      <tr>
+        <td class="pl-6 font-semibold text-ink/70 text-xs uppercase tracking-wide sticky left-0 bg-inherit">${Utils.escapeHtml(nome)}</td>
+        ${valores.map(v => `<td class="text-right font-semibold text-xs">${fmtNum(v)}</td>`).join('')}
+        <td class="text-right font-semibold text-xs pr-4">${fmtNum(totalAno)}</td>
+      </tr>
+    `;
+  }
+
   function somaArrays(...arrays) {
     return arrays[0].map((_, i) => arrays.reduce((s, arr) => s + arr[i], 0));
+  }
+
+  // Monta as linhas de uma seção (RECEITAS ou DESPESAS): cabeçalho, depois grupos com
+  // subtotal + categorias indentadas, depois categorias sem grupo direto na seção.
+  function linhasSecao(titulo, tipo, matriz, sinal, extraClass) {
+    const totalAno = matriz.totalMensal.reduce((s, v) => s + v, 0);
+    let html = linhaSecao(titulo, matriz.totalMensal.map(v => v * sinal), totalAno * sinal, extraClass);
+    const blocos = Store.categoriasAgrupadas(tipo);
+    blocos.forEach(bloco => {
+      if (bloco.grupo) {
+        const valoresGrupo = somaArrays(...bloco.categorias.map(c => matriz.porCategoria[c.id] || new Array(12).fill(0)));
+        const totalGrupo = valoresGrupo.reduce((s, v) => s + v, 0);
+        html += linhaGrupo(bloco.grupo.nome, valoresGrupo.map(v => v * sinal), totalGrupo * sinal);
+        bloco.categorias.forEach(c => {
+          const valores = matriz.porCategoria[c.id] || new Array(12).fill(0);
+          html += linhaCategoria(c.nome, valores.map(v => v * sinal), valores.reduce((s, v) => s + v, 0) * sinal, true);
+        });
+      } else {
+        bloco.categorias.forEach(c => {
+          const valores = matriz.porCategoria[c.id] || new Array(12).fill(0);
+          html += linhaCategoria(c.nome, valores.map(v => v * sinal), valores.reduce((s, v) => s + v, 0) * sinal, false);
+        });
+      }
+    });
+    return html;
   }
 
   function render(container) {
@@ -91,12 +126,8 @@ const ViewAnual = (() => {
             </tr>
           </thead>
           <tbody>
-            ${linhaSecao('RECEITAS', receitas.totalMensal, totalReceitasAno, 'bg-forest/5')}
-            ${receitas.categorias.map(c => linhaCategoria(c.nome, receitas.porCategoria[c.id], receitas.porCategoria[c.id].reduce((s, v) => s + v, 0))).join('')}
-
-            ${linhaSecao('DESPESAS', despesas.totalMensal.map(v => -v), -totalDespesasAno, 'bg-rose/5')}
-            ${despesas.categorias.map(c => linhaCategoria(c.nome, despesas.porCategoria[c.id].map(v => -v), -despesas.porCategoria[c.id].reduce((s, v) => s + v, 0))).join('')}
-
+            ${linhasSecao('RECEITAS', 'receita', receitas, 1, 'bg-forest/5')}
+            ${linhasSecao('DESPESAS', 'despesa', despesas, -1, 'bg-rose/5')}
             ${linhaSecao('RESULTADO DO PERÍODO', resultadoMensal, totalResultadoAno, 'border-t-2 border-forest/30 bg-beige')}
           </tbody>
         </table>

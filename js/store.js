@@ -10,22 +10,38 @@ const Store = (() => {
         { id: 'conta_caixa', nome: 'Caixa (dinheiro)', saldoInicial: 0 },
         { id: 'conta_banco', nome: 'Conta bancária', saldoInicial: 0 },
       ],
+      grupos: [
+        { id: 'grp_custos_operacionais', nome: 'Custos operacionais', tipo: 'despesa' },
+        { id: 'grp_despesas_operacionais', nome: 'Despesas operacionais', tipo: 'despesa' },
+        { id: 'grp_despesas_pessoais', nome: 'Despesas pessoais', tipo: 'despesa' },
+      ],
       categorias: [
-        { id: 'cat_venda_pecas', nome: 'Venda de peças', tipo: 'receita' },
-        { id: 'cat_venda_consig', nome: 'Venda por consignação', tipo: 'receita' },
-        { id: 'cat_outras_receitas', nome: 'Outras receitas', tipo: 'receita' },
-        { id: 'cat_aluguel', nome: 'Aluguel', tipo: 'despesa' },
-        { id: 'cat_consignantes', nome: 'Repasse a consignantes', tipo: 'despesa' },
-        { id: 'cat_fornecedores', nome: 'Fornecedores', tipo: 'despesa' },
-        { id: 'cat_embalagens', nome: 'Embalagens e etiquetas', tipo: 'despesa' },
-        { id: 'cat_marketing', nome: 'Marketing/Divulgação', tipo: 'despesa' },
-        { id: 'cat_taxas', nome: 'Taxas de cartão/maquininha', tipo: 'despesa' },
-        { id: 'cat_contas_consumo', nome: 'Água/Luz/Internet', tipo: 'despesa' },
-        { id: 'cat_funcionarios', nome: 'Funcionários/Pró-labore', tipo: 'despesa' },
-        { id: 'cat_transporte', nome: 'Transporte', tipo: 'despesa' },
-        { id: 'cat_manutencao', nome: 'Manutenção/Limpeza', tipo: 'despesa' },
-        { id: 'cat_impostos', nome: 'Impostos/Taxas', tipo: 'despesa' },
-        { id: 'cat_outras_despesas', nome: 'Outras despesas', tipo: 'despesa' },
+        { id: 'cat_venda_pecas', nome: 'Venda de peças', tipo: 'receita', grupoId: null },
+        { id: 'cat_venda_consig', nome: 'Venda por consignação', tipo: 'receita', grupoId: null },
+        { id: 'cat_outras_receitas', nome: 'Outras receitas', tipo: 'receita', grupoId: null },
+
+        { id: 'cat_fornecedores', nome: 'Fornecedores', tipo: 'despesa', grupoId: 'grp_custos_operacionais' },
+        { id: 'cat_consignantes', nome: 'Repasse a consignantes', tipo: 'despesa', grupoId: 'grp_custos_operacionais' },
+
+        { id: 'cat_aluguel', nome: 'Aluguel', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_embalagens', nome: 'Embalagens e etiquetas', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_marketing', nome: 'Marketing/Divulgação', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_taxas', nome: 'Taxas de cartão/maquininha', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_contas_consumo', nome: 'Água/Luz/Internet', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_funcionarios', nome: 'Funcionários/Pró-labore', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_transporte', nome: 'Transporte (loja)', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_manutencao', nome: 'Manutenção/Limpeza', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+        { id: 'cat_impostos', nome: 'Impostos/Taxas', tipo: 'despesa', grupoId: 'grp_despesas_operacionais' },
+
+        { id: 'cat_pessoal_moradia', nome: 'Moradia', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_alimentacao', nome: 'Alimentação', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_transporte', nome: 'Transporte pessoal', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_saude', nome: 'Saúde', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_lazer', nome: 'Lazer', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_educacao', nome: 'Educação', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+        { id: 'cat_pessoal_outras', nome: 'Outras despesas pessoais', tipo: 'despesa', grupoId: 'grp_despesas_pessoais' },
+
+        { id: 'cat_outras_despesas', nome: 'Outras despesas', tipo: 'despesa', grupoId: null },
       ],
       formasPagamento: ['Dinheiro', 'Pix', 'Cartão de débito', 'Cartão de crédito', 'Transferência', 'Boleto'],
       lancamentos: [],
@@ -44,10 +60,20 @@ const Store = (() => {
       if (!raw) return seedData();
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return seedData();
-      return Object.assign(seedData(), parsed, {
-        categorias: parsed.categorias || seedData().categorias,
-        contas: parsed.contas || seedData().contas,
-        formasPagamento: parsed.formasPagamento || seedData().formasPagamento,
+      const seed = seedData();
+      // Migração: adiciona grupos/categorias novos do seed que ainda não existem nos dados salvos,
+      // sem sobrescrever nada que o usuário já tenha (dados existentes sempre têm prioridade).
+      const gruposSalvos = parsed.grupos || [];
+      const gruposNovos = seed.grupos.filter(g => !gruposSalvos.some(gs => gs.id === g.id));
+      const categoriasSalvas = parsed.categorias || seed.categorias;
+      const categoriasNovas = parsed.categorias
+        ? seed.categorias.filter(c => !categoriasSalvas.some(cs => cs.id === c.id))
+        : [];
+      return Object.assign(seed, parsed, {
+        grupos: [...gruposSalvos, ...gruposNovos],
+        categorias: [...categoriasSalvas, ...categoriasNovas],
+        contas: parsed.contas || seed.contas,
+        formasPagamento: parsed.formasPagamento || seed.formasPagamento,
         lancamentos: parsed.lancamentos || [],
         parcelamentos: parsed.parcelamentos || [],
         extratoImportado: parsed.extratoImportado || [],
@@ -67,9 +93,31 @@ const Store = (() => {
     return state;
   }
 
+  // ---- Grupos de categoria (subcategorias) ----
+  function addGrupo(nome, tipo) {
+    const grupo = { id: Utils.uid('grp'), nome, tipo };
+    state.grupos.push(grupo);
+    persist();
+    return grupo;
+  }
+  function updateGrupo(id, changes) {
+    const g = state.grupos.find(g => g.id === id);
+    if (g) Object.assign(g, changes);
+    persist();
+  }
+  function deleteGrupo(id) {
+    state.categorias.forEach(c => { if (c.grupoId === id) c.grupoId = null; });
+    state.grupos = state.grupos.filter(g => g.id !== id);
+    persist();
+  }
+  function grupoNome(id) {
+    const g = state.grupos.find(g => g.id === id);
+    return g ? g.nome : null;
+  }
+
   // ---- Categorias ----
-  function addCategoria(nome, tipo) {
-    const cat = { id: Utils.uid('cat'), nome, tipo };
+  function addCategoria(nome, tipo, grupoId) {
+    const cat = { id: Utils.uid('cat'), nome, tipo, grupoId: grupoId || null };
     state.categorias.push(cat);
     persist();
     return cat;
@@ -86,6 +134,18 @@ const Store = (() => {
   function categoriaNome(id) {
     const c = state.categorias.find(c => c.id === id);
     return c ? c.nome : '—';
+  }
+  // Retorna [{ grupo: {id,nome}|null, categorias: [...] }] — grupos primeiro (na ordem cadastrada),
+  // depois um bloco final com categorias sem grupo (grupo: null), só se houver alguma.
+  function categoriasAgrupadas(tipo) {
+    const categorias = state.categorias.filter(c => c.tipo === tipo);
+    const blocos = state.grupos
+      .filter(g => g.tipo === tipo)
+      .map(g => ({ grupo: g, categorias: categorias.filter(c => c.grupoId === g.id) }))
+      .filter(b => b.categorias.length > 0);
+    const semGrupo = categorias.filter(c => !c.grupoId || !state.grupos.some(g => g.id === c.grupoId));
+    if (semGrupo.length > 0) blocos.push({ grupo: null, categorias: semGrupo });
+    return blocos;
   }
 
   // ---- Contas ----
@@ -268,7 +328,8 @@ const Store = (() => {
 
   return {
     getState, persist,
-    addCategoria, updateCategoria, deleteCategoria, categoriaNome,
+    addGrupo, updateGrupo, deleteGrupo, grupoNome,
+    addCategoria, updateCategoria, deleteCategoria, categoriaNome, categoriasAgrupadas,
     addConta, contaNome, updateConta, deleteConta,
     addLancamento, updateLancamento, deleteLancamento,
     addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,

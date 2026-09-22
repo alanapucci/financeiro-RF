@@ -180,8 +180,8 @@ const ViewContas = (() => {
 
     function atualizarCategorias() {
       const tipo = document.getElementById('pf-tipo').value === 'pagar' ? 'despesa' : 'receita';
-      const cats = state.categorias.filter(c => c.tipo === tipo);
-      document.getElementById('pf-categoria').innerHTML = cats.map(c => `<option value="${c.id}">${Utils.escapeHtml(c.nome)}</option>`).join('');
+      const blocos = Store.categoriasAgrupadas(tipo);
+      document.getElementById('pf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(blocos);
     }
     atualizarCategorias();
     document.getElementById('pf-tipo').addEventListener('change', atualizarCategorias);

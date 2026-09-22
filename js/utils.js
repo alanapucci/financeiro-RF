@@ -85,6 +85,14 @@ const Utils = (() => {
     };
   }
 
+  // Monta as <option>/<optgroup> de um <select> a partir do retorno de Store.categoriasAgrupadas().
+  function optionsCategoriasAgrupadas(blocos, selectedId) {
+    return blocos.map(b => {
+      const opts = b.categorias.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('');
+      return b.grupo ? `<optgroup label="${escapeHtml(b.grupo.nome)}">${opts}</optgroup>` : opts;
+    }).join('');
+  }
+
   function downloadFile(filename, content, mime) {
     const blob = new Blob([content], { type: mime || 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
@@ -100,5 +108,6 @@ const Utils = (() => {
   return {
     formatCurrency, parseCurrency, formatDate, toIsoDate, todayIso,
     monthLabel, monthKey, addMonths, uid, escapeHtml, debounce, downloadFile,
+    optionsCategoriasAgrupadas,
   };
 })();

@@ -53,6 +53,8 @@ Cadastre compromissos parcelados (ex: um fornecedor em 3x, um empréstimo, uma c
 ### 🏷️ Categorias e contas
 Gerencie categorias de receita/despesa (já vem com sugestões para brechó: venda de peças, repasse a consignantes, aluguel, taxas de maquininha, etc.) e as contas/caixas usadas (dinheiro, banco).
 
+As categorias de despesa podem ser organizadas em **grupos** (subcategorias), como no exemplo padrão: *Custos operacionais*, *Despesas operacionais* e *Despesas pessoais* — e dentro de "Despesas pessoais" já vêm categorias como Moradia, Alimentação, Saúde, Lazer, etc. Crie quantos grupos quiser em **Categorias → + Grupo**. Os grupos aparecem como subtotal na Visão anual, igual ao painel do Nibo.
+
 ## Formato do CSV de extrato bancário
 
 O importador aceita CSV com vírgula ou ponto e vírgula como separador, e tenta identificar automaticamente qual coluna é data, qual é valor e qual é descrição. Formatos de data aceitos: `DD/MM/AAAA` ou `AAAA-MM-DD`. Valores podem usar vírgula ou ponto como separador decimal (ex: `1.234,56` ou `1234.56`). Valores negativos são tratados como saída/despesa.
