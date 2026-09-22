@@ -31,6 +31,7 @@ const Store = (() => {
       lancamentos: [],
       parcelamentos: [],
       extratoImportado: [],
+      vendas: [],
       _ultimaAtualizacao: hoje,
     };
   }
@@ -50,6 +51,7 @@ const Store = (() => {
         lancamentos: parsed.lancamentos || [],
         parcelamentos: parsed.parcelamentos || [],
         extratoImportado: parsed.extratoImportado || [],
+        vendas: parsed.vendas || [],
       });
     } catch (e) {
       console.error('Erro ao carregar dados salvos, iniciando do zero.', e);
@@ -230,6 +232,24 @@ const Store = (() => {
     persist();
   }
 
+  // ---- Vendas por consignação (registro de recebimentos, independente do financeiro) ----
+  function addVenda(data) {
+    const venda = Object.assign({ id: Utils.uid('venda') }, data);
+    state.vendas.push(venda);
+    persist();
+    return venda;
+  }
+  function updateVenda(id, changes) {
+    const v = state.vendas.find(v => v.id === id);
+    if (v) Object.assign(v, changes);
+    persist();
+    return v;
+  }
+  function deleteVenda(id) {
+    state.vendas = state.vendas.filter(v => v.id !== id);
+    persist();
+  }
+
   // ---- Backup / restauração ----
   function exportJson() {
     return JSON.stringify(state, null, 2);
@@ -253,6 +273,7 @@ const Store = (() => {
     addLancamento, updateLancamento, deleteLancamento,
     addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
+    addVenda, updateVenda, deleteVenda,
     exportJson, importJson, resetAll,
   };
 })();

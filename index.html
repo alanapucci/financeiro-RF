@@ -32,6 +32,7 @@
   <nav id="main-nav" class="max-w-6xl mx-auto px-4 sm:px-6 hidden sm:flex gap-1 pb-2 overflow-x-auto">
     <button data-view="resumo" class="nav-tab">📊 Resumo</button>
     <button data-view="anual" class="nav-tab">📈 Visão anual</button>
+    <button data-view="vendas" class="nav-tab">💰 Vendas</button>
     <button data-view="lancamentos" class="nav-tab">🧾 Lançamentos</button>
     <button data-view="conciliacao" class="nav-tab">🔗 Conciliação</button>
     <button data-view="contas" class="nav-tab">📅 A pagar/receber</button>
@@ -44,6 +45,7 @@
   <div class="bg-cream w-64 h-full p-4 flex flex-col gap-1 shadow-xl">
     <button data-view="resumo" class="nav-tab-mobile">📊 Resumo</button>
     <button data-view="anual" class="nav-tab-mobile">📈 Visão anual</button>
+    <button data-view="vendas" class="nav-tab-mobile">💰 Vendas</button>
     <button data-view="lancamentos" class="nav-tab-mobile">🧾 Lançamentos</button>
     <button data-view="conciliacao" class="nav-tab-mobile">🔗 Conciliação</button>
     <button data-view="contas" class="nav-tab-mobile">📅 A pagar/receber</button>
@@ -56,6 +58,7 @@
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
   <div id="view-resumo" class="view"></div>
   <div id="view-anual" class="view hidden"></div>
+  <div id="view-vendas" class="view hidden"></div>
   <div id="view-lancamentos" class="view hidden"></div>
   <div id="view-conciliacao" class="view hidden"></div>
   <div id="view-contas" class="view hidden"></div>
@@ -72,6 +75,7 @@
 <script src="js/csv.js"></script>
 <script src="js/views/resumo.js"></script>
 <script src="js/views/anual.js"></script>
+<script src="js/views/vendas.js"></script>
 <script src="js/views/lancamentos.js"></script>
 <script src="js/views/conciliacao.js"></script>
 <script src="js/views/contas.js"></script>

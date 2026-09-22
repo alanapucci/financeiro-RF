@@ -32,6 +32,12 @@ No topo do app, clique em **⚙️ Backup**:
 ### 📊 Resumo
 Painel com saldo atual, receitas/despesas do mês, gráfico de fluxo de caixa dos últimos 6 meses, gráfico de despesas por categoria e lista dos próximos vencimentos (30 dias).
 
+### 📈 Visão anual
+Painel mês a mês por categoria (Jan a Dez + total do ano), no mesmo formato do painel de acompanhamento do Nibo: receitas por categoria, despesas por categoria e resultado do período.
+
+### 💰 Vendas por consignação
+Registro de cada venda/recebimento — cliente, peça vendida, fornecedora (com CPF/CNPJ e CEP para emissão de nota), valor da venda, custo (repasse à fornecedora) e valor da nota/comissão. **Esse registro é separado do financeiro**: não gera lançamentos nem entra nos relatórios de Resumo/Visão anual automaticamente — serve para você controlar o que precisa repassar a cada fornecedora, o que já foi faturado (nº da nota) e conferir os recebimentos na conciliação. Dá pra exportar tudo em CSV a qualquer momento.
+
 ### 🧾 Lançamentos
 Cadastro de entradas e saídas (data, descrição, categoria, conta, valor, forma de pagamento). Filtros por mês, tipo e categoria, além de busca por descrição.
 
