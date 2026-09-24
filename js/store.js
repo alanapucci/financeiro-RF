@@ -301,6 +301,12 @@ const Store = (() => {
     persist();
     return regra;
   }
+  function updateRegra(id, changes) {
+    const r = state.regras.find(r => r.id === id);
+    if (r) Object.assign(r, changes);
+    persist();
+    return r;
+  }
   function deleteRegra(id) {
     state.regras = state.regras.filter(r => r.id !== id);
     persist();
@@ -378,7 +384,7 @@ const Store = (() => {
     addLancamento, updateLancamento, deleteLancamento,
     addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
-    addRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
+    addRegra, updateRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
     addVenda, updateVenda, deleteVenda,
     exportJson, importJson, resetAll,
   };

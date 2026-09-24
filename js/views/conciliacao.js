@@ -191,24 +191,31 @@ const ViewConciliacao = (() => {
     render(container);
   }
 
-  function abrirFormRegra(linha, container) {
+  // linha: linha de extrato (criação, a partir de 🏷️) — regraExistente: regra já salva (edição)
+  function abrirFormRegra(linha, container, regraExistente) {
     const state = Store.getState();
-    const tipoSugerido = linha.valor < 0 ? 'despesa' : 'receita';
+    const editando = !!regraExistente;
+    const base = regraExistente || {
+      padrao: linha.descricao,
+      tipo: linha.valor < 0 ? 'despesa' : 'receita',
+      contaId: null,
+      descricaoModelo: '',
+    };
     App.openModal(`
-      <h3 class="font-heading font-bold text-xl text-forest-800 mb-2">Criar regra de categorização</h3>
-      <p class="text-sm text-ink/60 mb-4">Sempre que o texto abaixo aparecer no extrato, o app já cria e concilia o lançamento sozinho.</p>
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-2">${editando ? 'Editar' : 'Criar'} regra de categorização</h3>
+      <p class="text-sm text-ink/60 mb-4">Sempre que o texto abaixo aparecer no extrato, o app já cria e concilia o lançamento sozinho, na conta escolhida.</p>
       <form id="form-regra" class="space-y-3">
         <div>
           <label class="label">Texto a reconhecer no extrato</label>
-          <input type="text" id="rf-padrao" class="input" required value="${Utils.escapeHtml(linha.descricao)}">
+          <input type="text" id="rf-padrao" class="input" required value="${Utils.escapeHtml(base.padrao)}">
           <p class="text-xs text-ink/40 mt-1">Pode encurtar (ex: só "LITHIUM SOFTWARE") para pegar variações do mesmo texto.</p>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label">Tipo</label>
             <select id="rf-tipo" class="input">
-              <option value="despesa" ${tipoSugerido === 'despesa' ? 'selected' : ''}>Despesa</option>
-              <option value="receita" ${tipoSugerido === 'receita' ? 'selected' : ''}>Receita</option>
+              <option value="despesa" ${base.tipo === 'despesa' ? 'selected' : ''}>Despesa</option>
+              <option value="receita" ${base.tipo === 'receita' ? 'selected' : ''}>Receita</option>
             </select>
           </div>
           <div>
@@ -217,11 +224,17 @@ const ViewConciliacao = (() => {
           </div>
         </div>
         <div>
+          <label class="label">Conta (onde esse pagamento/recebimento cai)</label>
+          <select id="rf-conta" class="input">
+            ${state.contas.map(c => `<option value="${c.id}" ${base.contaId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.nome)}</option>`).join('')}
+          </select>
+        </div>
+        <div>
           <label class="label">Descrição do lançamento (opcional)</label>
-          <input type="text" id="rf-descricao" class="input" placeholder="Deixe em branco para usar o texto do extrato">
+          <input type="text" id="rf-descricao" class="input" value="${base.descricaoModelo ? Utils.escapeHtml(base.descricaoModelo) : ''}" placeholder="Deixe em branco para usar o texto do extrato">
         </div>
         <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn-primary flex-1">Criar regra e aplicar agora</button>
+          <button type="submit" class="btn-primary flex-1">${editando ? 'Salvar alterações' : 'Criar regra e aplicar agora'}</button>
           <button type="button" id="btn-cancel-regra" class="btn-secondary">Cancelar</button>
         </div>
       </form>
@@ -229,24 +242,32 @@ const ViewConciliacao = (() => {
 
     function atualizarCategorias() {
       const tipo = document.getElementById('rf-tipo').value;
-      document.getElementById('rf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(Store.categoriasAgrupadas(tipo));
+      document.getElementById('rf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(Store.categoriasAgrupadas(tipo), base.categoriaId);
     }
     atualizarCategorias();
     document.getElementById('rf-tipo').addEventListener('change', atualizarCategorias);
     document.getElementById('btn-cancel-regra').addEventListener('click', App.closeModal);
     document.getElementById('form-regra').addEventListener('submit', (e) => {
       e.preventDefault();
-      Store.addRegra({
+      const dados = {
         padrao: document.getElementById('rf-padrao').value,
         tipo: document.getElementById('rf-tipo').value,
         categoriaId: document.getElementById('rf-categoria').value,
-        contaId: state.contas[0] ? state.contas[0].id : null,
+        contaId: document.getElementById('rf-conta').value,
         descricaoModelo: document.getElementById('rf-descricao').value,
-      });
-      const aplicadas = Store.aplicarRegrasAutomaticas();
-      App.toast(`Regra criada! ${aplicadas} lançamento(s) categorizado(s) agora.`);
-      App.closeModal();
-      render(container);
+      };
+      if (editando) {
+        Store.updateRegra(regraExistente.id, dados);
+        App.toast('Regra atualizada!');
+        App.closeModal();
+        render(container);
+      } else {
+        Store.addRegra(dados);
+        const aplicadas = Store.aplicarRegrasAutomaticas();
+        App.toast(`Regra criada! ${aplicadas} lançamento(s) categorizado(s) agora.`);
+        App.closeModal();
+        render(container);
+      }
     });
   }
 
@@ -260,9 +281,12 @@ const ViewConciliacao = (() => {
           <li class="flex items-center justify-between gap-2 py-2.5 text-sm">
             <div>
               <p class="font-medium">"${Utils.escapeHtml(r.padrao)}"</p>
-              <p class="text-xs text-ink/50">${r.tipo === 'despesa' ? 'Despesa' : 'Receita'} → ${Utils.escapeHtml(Store.categoriaNome(r.categoriaId))}</p>
+              <p class="text-xs text-ink/50">${r.tipo === 'despesa' ? 'Despesa' : 'Receita'} → ${Utils.escapeHtml(Store.categoriaNome(r.categoriaId))} · ${Utils.escapeHtml(Store.contaNome(r.contaId))}</p>
             </div>
-            <button class="btn-icon" data-del-regra="${r.id}" title="Excluir regra">🗑️</button>
+            <span class="flex gap-1 shrink-0">
+              <button class="btn-icon" data-edit-regra="${r.id}" title="Editar regra">✏️</button>
+              <button class="btn-icon" data-del-regra="${r.id}" title="Excluir regra">🗑️</button>
+            </span>
           </li>
         `).join('')}
       </ul>
@@ -270,6 +294,12 @@ const ViewConciliacao = (() => {
       <button type="button" id="btn-fechar-regras" class="btn-secondary w-full mt-4">Fechar</button>
     `);
     document.getElementById('btn-fechar-regras').addEventListener('click', App.closeModal);
+    document.querySelectorAll('[data-edit-regra]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const regra = state.regras.find(r => r.id === btn.dataset.editRegra);
+        abrirFormRegra(null, container, regra);
+      });
+    });
     document.querySelectorAll('[data-del-regra]').forEach(btn => {
       btn.addEventListener('click', () => {
         Store.deleteRegra(btn.dataset.delRegra);
