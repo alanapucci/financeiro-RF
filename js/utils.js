@@ -67,6 +67,12 @@ const Utils = (() => {
     return `${yy}-${mm}-${dd}`;
   }
 
+  function diasEntre(isoA, isoB) {
+    const a = new Date(isoA + 'T00:00:00');
+    const b = new Date(isoB + 'T00:00:00');
+    return Math.round(Math.abs(a - b) / 86400000);
+  }
+
   function uid(prefix) {
     return `${prefix || 'id'}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -107,7 +113,7 @@ const Utils = (() => {
 
   return {
     formatCurrency, parseCurrency, formatDate, toIsoDate, todayIso,
-    monthLabel, monthKey, addMonths, uid, escapeHtml, debounce, downloadFile,
+    monthLabel, monthKey, addMonths, diasEntre, uid, escapeHtml, debounce, downloadFile,
     optionsCategoriasAgrupadas,
   };
 })();

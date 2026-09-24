@@ -12,16 +12,17 @@ const ViewConciliacao = (() => {
     container.innerHTML = `
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h2 class="font-heading font-bold text-2xl text-forest-800">Conciliação bancária</h2>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <label class="btn-secondary cursor-pointer">
             ⬆️ Importar extrato (CSV)
             <input type="file" id="input-csv" accept=".csv,text/csv" class="hidden">
           </label>
+          <button id="btn-regras" class="btn-secondary">🏷️ Regras (${state.regras.length})</button>
           <button id="btn-auto" class="btn-primary">🔗 Conciliar automaticamente</button>
         </div>
       </div>
 
-      <p class="text-sm text-ink/60 mb-4">Exporte o extrato do seu banco em CSV (data, descrição e valor) e importe aqui. Depois, vincule cada linha do extrato ao lançamento correspondente — ou deixe o app tentar casar automaticamente pela data e valor.</p>
+      <p class="text-sm text-ink/60 mb-4">Exporte o extrato do seu banco em CSV (data, descrição e valor) e importe aqui. Depois, vincule cada linha do extrato ao lançamento correspondente, ou deixe o app tentar casar automaticamente pela data (até 3 dias de diferença) e valor. Clique em 🏷️ numa linha do extrato para ensinar o app a categorizar sozinho sempre que aquele texto aparecer de novo.</p>
 
       <div id="conc-actions" class="hidden card mb-4 flex flex-wrap items-center gap-3 bg-forest/5 border-forest/30">
         <span class="text-sm font-semibold text-forest-800">1 item do extrato + 1 lançamento selecionados</span>
@@ -42,6 +43,7 @@ const ViewConciliacao = (() => {
                   <td>${Utils.escapeHtml(e.descricao)}</td>
                   <td class="font-semibold ${e.valor >= 0 ? 'text-forest-700' : 'text-rose-600'}">${Utils.formatCurrency(e.valor)}</td>
                   <td class="pr-4 text-right whitespace-nowrap">
+                    <button class="btn-icon" data-nova-regra="${e.id}" title="Criar regra de categorização a partir deste texto">🏷️</button>
                     <button class="btn-icon" data-quick-add="${e.id}" title="Criar lançamento a partir desta linha">➕</button>
                     <button class="btn-icon" data-del-extrato="${e.id}" title="Remover linha">🗑️</button>
                   </td>
@@ -74,6 +76,7 @@ const ViewConciliacao = (() => {
 
     document.getElementById('input-csv').addEventListener('change', handleCsvImport);
     document.getElementById('btn-auto').addEventListener('click', () => conciliarAutomatico(container));
+    document.getElementById('btn-regras').addEventListener('click', () => abrirListaRegras(container));
 
     container.querySelectorAll('[data-sel-extrato]').forEach(row => {
       row.addEventListener('click', (e) => {
@@ -93,6 +96,12 @@ const ViewConciliacao = (() => {
         Store.deleteExtratoLinha(btn.dataset.delExtrato);
         App.toast('Linha removida.');
         render(container);
+      });
+    });
+    container.querySelectorAll('[data-nova-regra]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const linha = state.extratoImportado.find(e => e.id === btn.dataset.novaRegra);
+        abrirFormRegra(linha, container);
       });
     });
     container.querySelectorAll('[data-quick-add]').forEach(btn => {
@@ -138,7 +147,8 @@ const ViewConciliacao = (() => {
       const { linhas, erros } = CsvImport.parse(reader.result);
       if (linhas.length > 0) {
         Store.addExtratoLinhas(linhas);
-        App.toast(`${linhas.length} linha(s) importada(s)!`);
+        const aplicadas = Store.aplicarRegrasAutomaticas();
+        App.toast(`${linhas.length} linha(s) importada(s)!` + (aplicadas > 0 ? ` ${aplicadas} já categorizada(s) por regra.` : ''));
         App.renderView('conciliacao');
       }
       if (erros.length > 0) {
@@ -152,24 +162,122 @@ const ViewConciliacao = (() => {
     e.target.value = '';
   }
 
+  const TOLERANCIA_DIAS = 3;
+
   function conciliarAutomatico(container) {
     const state = Store.getState();
+    // Passo 1: aplica regras de categorização já cadastradas nas linhas ainda sem lançamento.
+    const aplicadasPorRegra = Store.aplicarRegrasAutomaticas();
+
+    // Passo 2: casa o que sobrou pelo valor igual e data mais próxima (até TOLERANCIA_DIAS).
     const extratoPendente = state.extratoImportado.filter(e => !e.conciliadoComLancamentoId);
-    const lancDisponiveis = state.lancamentos.filter(l => !l.conciliado);
-    let count = 0;
+    let countData = 0;
     extratoPendente.forEach(e => {
-      const candidato = lancDisponiveis.find(l =>
-        !l.conciliado &&
-        l.data === e.data &&
-        Math.abs(Math.abs(l.valor) - Math.abs(e.valor)) < 0.01
-      );
-      if (candidato) {
-        Store.conciliar(e.id, candidato.id);
-        count++;
+      const candidatos = state.lancamentos
+        .filter(l => !l.conciliado && Math.abs(Math.abs(l.valor) - Math.abs(e.valor)) < 0.01)
+        .map(l => ({ l, dist: Utils.diasEntre(l.data, e.data) }))
+        .filter(x => x.dist <= TOLERANCIA_DIAS)
+        .sort((a, b) => a.dist - b.dist);
+      if (candidatos.length > 0) {
+        Store.conciliar(e.id, candidatos[0].l.id);
+        countData++;
       }
     });
-    App.toast(count > 0 ? `${count} conciliação(ões) feita(s) automaticamente!` : 'Nenhum par exato (mesma data e valor) foi encontrado.', count > 0 ? undefined : 'error');
+
+    const total = aplicadasPorRegra + countData;
+    App.toast(total > 0
+      ? `${total} conciliação(ões) feita(s) automaticamente! (${aplicadasPorRegra} por regra, ${countData} por data/valor)`
+      : 'Nada para conciliar automaticamente — tente vincular manualmente ou criar uma regra.', total > 0 ? undefined : 'error');
     render(container);
+  }
+
+  function abrirFormRegra(linha, container) {
+    const state = Store.getState();
+    const tipoSugerido = linha.valor < 0 ? 'despesa' : 'receita';
+    App.openModal(`
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-2">Criar regra de categorização</h3>
+      <p class="text-sm text-ink/60 mb-4">Sempre que o texto abaixo aparecer no extrato, o app já cria e concilia o lançamento sozinho.</p>
+      <form id="form-regra" class="space-y-3">
+        <div>
+          <label class="label">Texto a reconhecer no extrato</label>
+          <input type="text" id="rf-padrao" class="input" required value="${Utils.escapeHtml(linha.descricao)}">
+          <p class="text-xs text-ink/40 mt-1">Pode encurtar (ex: só "LITHIUM SOFTWARE") para pegar variações do mesmo texto.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Tipo</label>
+            <select id="rf-tipo" class="input">
+              <option value="despesa" ${tipoSugerido === 'despesa' ? 'selected' : ''}>Despesa</option>
+              <option value="receita" ${tipoSugerido === 'receita' ? 'selected' : ''}>Receita</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Categoria</label>
+            <select id="rf-categoria" class="input"></select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Descrição do lançamento (opcional)</label>
+          <input type="text" id="rf-descricao" class="input" placeholder="Deixe em branco para usar o texto do extrato">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn-primary flex-1">Criar regra e aplicar agora</button>
+          <button type="button" id="btn-cancel-regra" class="btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    `);
+
+    function atualizarCategorias() {
+      const tipo = document.getElementById('rf-tipo').value;
+      document.getElementById('rf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(Store.categoriasAgrupadas(tipo));
+    }
+    atualizarCategorias();
+    document.getElementById('rf-tipo').addEventListener('change', atualizarCategorias);
+    document.getElementById('btn-cancel-regra').addEventListener('click', App.closeModal);
+    document.getElementById('form-regra').addEventListener('submit', (e) => {
+      e.preventDefault();
+      Store.addRegra({
+        padrao: document.getElementById('rf-padrao').value,
+        tipo: document.getElementById('rf-tipo').value,
+        categoriaId: document.getElementById('rf-categoria').value,
+        contaId: state.contas[0] ? state.contas[0].id : null,
+        descricaoModelo: document.getElementById('rf-descricao').value,
+      });
+      const aplicadas = Store.aplicarRegrasAutomaticas();
+      App.toast(`Regra criada! ${aplicadas} lançamento(s) categorizado(s) agora.`);
+      App.closeModal();
+      render(container);
+    });
+  }
+
+  function abrirListaRegras(container) {
+    const state = Store.getState();
+    App.openModal(`
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-4">Regras de categorização automática</h3>
+      ${state.regras.length === 0 ? '<p class="text-sm text-ink/50">Nenhuma regra ainda. Crie uma clicando em 🏷️ numa linha do extrato.</p>' : `
+      <ul class="divide-y divide-sand/40 max-h-96 overflow-y-auto">
+        ${state.regras.map(r => `
+          <li class="flex items-center justify-between gap-2 py-2.5 text-sm">
+            <div>
+              <p class="font-medium">"${Utils.escapeHtml(r.padrao)}"</p>
+              <p class="text-xs text-ink/50">${r.tipo === 'despesa' ? 'Despesa' : 'Receita'} → ${Utils.escapeHtml(Store.categoriaNome(r.categoriaId))}</p>
+            </div>
+            <button class="btn-icon" data-del-regra="${r.id}" title="Excluir regra">🗑️</button>
+          </li>
+        `).join('')}
+      </ul>
+      `}
+      <button type="button" id="btn-fechar-regras" class="btn-secondary w-full mt-4">Fechar</button>
+    `);
+    document.getElementById('btn-fechar-regras').addEventListener('click', App.closeModal);
+    document.querySelectorAll('[data-del-regra]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        Store.deleteRegra(btn.dataset.delRegra);
+        App.toast('Regra excluída.');
+        App.closeModal();
+        render(container);
+      });
+    });
   }
 
   return { render };

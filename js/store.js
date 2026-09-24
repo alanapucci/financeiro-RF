@@ -48,6 +48,7 @@ const Store = (() => {
       parcelamentos: [],
       extratoImportado: [],
       vendas: [],
+      regras: [],
       _ultimaAtualizacao: hoje,
     };
   }
@@ -78,6 +79,7 @@ const Store = (() => {
         parcelamentos: parsed.parcelamentos || [],
         extratoImportado: parsed.extratoImportado || [],
         vendas: parsed.vendas || [],
+        regras: parsed.regras || [],
       });
     } catch (e) {
       console.error('Erro ao carregar dados salvos, iniciando do zero.', e);
@@ -292,6 +294,48 @@ const Store = (() => {
     persist();
   }
 
+  // ---- Regras de categorização automática (a partir do texto do extrato) ----
+  function addRegra({ padrao, tipo, categoriaId, contaId, descricaoModelo }) {
+    const regra = { id: Utils.uid('regra'), padrao: padrao.trim(), tipo, categoriaId, contaId: contaId || null, descricaoModelo: (descricaoModelo || '').trim() };
+    state.regras.push(regra);
+    persist();
+    return regra;
+  }
+  function deleteRegra(id) {
+    state.regras = state.regras.filter(r => r.id !== id);
+    persist();
+  }
+  function encontrarRegra(descricaoExtrato) {
+    const alvo = (descricaoExtrato || '').toUpperCase();
+    return state.regras.find(r => r.padrao && alvo.includes(r.padrao.toUpperCase()));
+  }
+  // Varre o extrato ainda não conciliado e aplica regras existentes: cria o lançamento
+  // correspondente e já concilia com a linha do extrato. Retorna quantas foram aplicadas.
+  function aplicarRegrasAutomaticas() {
+    let aplicadas = 0;
+    state.extratoImportado
+      .filter(e => !e.conciliadoComLancamentoId)
+      .forEach(e => {
+        const regra = encontrarRegra(e.descricao);
+        if (!regra) return;
+        const lanc = addLancamento({
+          data: e.data,
+          descricao: regra.descricaoModelo || e.descricao,
+          categoriaId: regra.categoriaId,
+          contaId: regra.contaId || (state.contas[0] ? state.contas[0].id : null),
+          tipo: regra.tipo,
+          valor: Math.abs(e.valor),
+          formaPagamento: 'Pix',
+          conciliado: true,
+          origem: 'regra',
+        });
+        e.conciliadoComLancamentoId = lanc.id;
+        aplicadas++;
+      });
+    persist();
+    return aplicadas;
+  }
+
   // ---- Vendas por consignação (registro de recebimentos, independente do financeiro) ----
   function addVenda(data) {
     const venda = Object.assign({ id: Utils.uid('venda') }, data);
@@ -334,6 +378,7 @@ const Store = (() => {
     addLancamento, updateLancamento, deleteLancamento,
     addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
+    addRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
     addVenda, updateVenda, deleteVenda,
     exportJson, importJson, resetAll,
   };
