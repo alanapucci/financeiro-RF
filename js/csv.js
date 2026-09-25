@@ -30,7 +30,8 @@ const CsvImport = (() => {
     return /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(s) || /^\d{4}-\d{2}-\d{2}$/.test(s);
   }
   function looksLikeValue(s) {
-    return /^-?[\d.,]+$/.test(s.replace(/[R$\s]/g, '')) && /\d/.test(s);
+    const semParenteses = s.replace(/^\((.*)\)$/, '$1');
+    return /^-?[\d.,]+$/.test(semParenteses.replace(/[R$\s]/g, '')) && /\d/.test(s);
   }
   // Remove acentos e caixa para comparar nomes de coluna com segurança.
   function normalizar(s) {

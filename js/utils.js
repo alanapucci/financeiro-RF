@@ -8,15 +8,24 @@ const Utils = (() => {
   }
 
   // Recebe string em formato brasileiro ("1.234,56" ou "1234,56" ou "1234.56") e devolve number.
+  // Aceita negativo com "-" na frente ou entre parênteses, formato contábil comum em extratos: "(R$490,00)".
   function parseCurrency(str) {
     if (typeof str === 'number') return str;
     if (!str) return 0;
-    let s = String(str).trim().replace(/[R$\s]/g, '');
+    let s = String(str).trim();
+    let negativo = false;
+    const entreParenteses = s.match(/^\((.*)\)$/);
+    if (entreParenteses) {
+      negativo = true;
+      s = entreParenteses[1].trim();
+    }
+    s = s.replace(/[R$\s]/g, '');
     if (s.includes(',')) {
       s = s.replace(/\./g, '').replace(',', '.');
     }
     const n = parseFloat(s);
-    return isNaN(n) ? 0 : n;
+    if (isNaN(n)) return 0;
+    return negativo ? -Math.abs(n) : n;
   }
 
   // Espera "YYYY-MM-DD" (formato de <input type=date>) e devolve "DD/MM/YYYY".

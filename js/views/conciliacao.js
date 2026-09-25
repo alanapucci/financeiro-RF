@@ -139,12 +139,23 @@ const ViewConciliacao = (() => {
     }
   }
 
+  // Extratos de banco/cooperativa às vezes vêm em ISO-8859-1 (Latin-1), não UTF-8 — decodifica como
+  // UTF-8 e, se aparecer caractere de substituição (sinal de bytes inválidos), tenta de novo em Latin-1.
+  function decodificarArquivo(bytes) {
+    const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+    if (utf8.includes('�')) {
+      return new TextDecoder('iso-8859-1').decode(bytes);
+    }
+    return utf8;
+  }
+
   function handleCsvImport(e) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const { linhas, erros } = CsvImport.parse(reader.result);
+      const texto = decodificarArquivo(new Uint8Array(reader.result));
+      const { linhas, erros } = CsvImport.parse(texto);
       if (linhas.length > 0) {
         Store.addExtratoLinhas(linhas);
         const aplicadas = Store.aplicarRegrasAutomaticas();
@@ -158,7 +169,7 @@ const ViewConciliacao = (() => {
         App.toast('Nenhum dado encontrado no arquivo.', 'error');
       }
     };
-    reader.readAsText(file, 'utf-8');
+    reader.readAsArrayBuffer(file);
     e.target.value = '';
   }
 
