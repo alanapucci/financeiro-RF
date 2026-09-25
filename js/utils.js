@@ -36,11 +36,11 @@ const Utils = (() => {
     return `${d}/${m}/${y}`;
   }
 
-  // Converte "DD/MM/YYYY" ou "DD-MM-YYYY" para "YYYY-MM-DD".
+  // Converte "DD/MM/YYYY", "DD-MM-YYYY" ou "YYYY-MM-DDTHH:MM:SSZ" (ISO com hora) para "YYYY-MM-DD".
   function toIsoDate(brDate) {
     if (!brDate) return '';
     const s = brDate.trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
     const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
     if (!m) return '';
     let [, d, mo, y] = m;

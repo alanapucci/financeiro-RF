@@ -141,12 +141,19 @@ const ViewConciliacao = (() => {
 
   // Extratos de banco/cooperativa às vezes vêm em ISO-8859-1 (Latin-1), não UTF-8 — decodifica como
   // UTF-8 e, se aparecer caractere de substituição (sinal de bytes inválidos), tenta de novo em Latin-1.
+  // Extratos vêm em codificações variadas (Sicredi em ISO-8859-1, Mercado Pago às vezes em
+  // MacRoman...). Tenta UTF-8; se inválido, tenta Windows-1252 e, se essa ainda sobrar bytes que
+  // caem em posições não definidas nela (sinal de que era outra coisa), tenta MacRoman.
   function decodificarArquivo(bytes) {
     const utf8 = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
-    if (utf8.includes('�')) {
-      return new TextDecoder('iso-8859-1').decode(bytes);
-    }
-    return utf8;
+    if (!utf8.includes('�')) return utf8;
+
+    const win1252 = new TextDecoder('windows-1252').decode(bytes);
+    // eslint-disable-next-line no-control-regex
+    const temControleInvalido = /[\x80-\x9f]/.test(win1252);
+    if (!temControleInvalido) return win1252;
+
+    return new TextDecoder('macintosh').decode(bytes);
   }
 
   function handleCsvImport(e) {

@@ -27,7 +27,7 @@ const CsvImport = (() => {
   }
 
   function looksLikeDate(s) {
-    return /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(s) || /^\d{4}-\d{2}-\d{2}$/.test(s);
+    return /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}$/.test(s) || /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(s);
   }
   function looksLikeValue(s) {
     const semParenteses = s.replace(/^\((.*)\)$/, '$1');
@@ -45,13 +45,13 @@ const CsvImport = (() => {
     const limite = Math.min(rows.length, 15);
     for (let i = 0; i < limite; i++) {
       const cols = rows[i].map(normalizar);
-      const idxData = cols.findIndex(c => c === 'data' || c.startsWith('data '));
-      const idxValor = cols.findIndex(c => c.includes('valor') && !c.includes('saldo'));
+      const idxData = cols.findIndex(c => c === 'data' || c.startsWith('data ') || c.includes('date'));
+      const idxValor = cols.findIndex(c => (c.includes('valor') || c.includes('amount')) && !c.includes('saldo') && !c.includes('balance'));
       if (idxData === -1 || idxValor === -1) continue;
-      const idxDescricao = cols.findIndex(c => c.includes('descri') || c.includes('historic'));
+      const idxDescricao = cols.findIndex(c => c.includes('descri') || c.includes('historic') || c.includes('tipo') || c.includes('type'));
       const idxIgnorar = cols
         .map((c, i) => ({ c, i }))
-        .filter(({ c }) => c.includes('saldo') || c.includes('documento'))
+        .filter(({ c }) => c.includes('saldo') || c.includes('balance') || c.includes('documento') || c.includes('numero') || c.includes('referen'))
         .map(({ i }) => i);
       return { headerIndex: i, idxData, idxValor, idxDescricao, idxIgnorar };
     }
