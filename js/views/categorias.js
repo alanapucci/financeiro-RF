@@ -57,9 +57,12 @@ const ViewCategorias = (() => {
         </div>
         <ul class="divide-y divide-sand/40">
           ${state.contas.map(c => `
-            <li class="flex items-center justify-between py-2 text-sm">
+            <li class="flex items-center justify-between py-2 text-sm gap-2">
               <span>${Utils.escapeHtml(c.nome)} <span class="text-ink/40">— saldo inicial ${Utils.formatCurrency(c.saldoInicial)}</span></span>
-              <button class="btn-icon" data-del-conta="${c.id}" title="Excluir">🗑️</button>
+              <span class="flex gap-1 shrink-0">
+                <button class="btn-icon" style="width:1.75rem;height:1.75rem" data-edit-conta="${c.id}" title="Editar">✏️</button>
+                <button class="btn-icon" style="width:1.75rem;height:1.75rem" data-del-conta="${c.id}" title="Excluir">🗑️</button>
+              </span>
             </li>
           `).join('') || '<li class="text-sm text-ink/50 py-2">Nenhuma cadastrada.</li>'}
         </ul>
@@ -94,7 +97,13 @@ const ViewCategorias = (() => {
         }
       });
     });
-    document.getElementById('btn-add-conta').addEventListener('click', openFormConta);
+    document.getElementById('btn-add-conta').addEventListener('click', () => openFormConta());
+    container.querySelectorAll('[data-edit-conta]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const conta = state.contas.find(c => c.id === btn.dataset.editConta);
+        openFormConta(conta);
+      });
+    });
     container.querySelectorAll('[data-del-conta]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (confirm('Excluir esta conta?')) {
@@ -188,20 +197,22 @@ const ViewCategorias = (() => {
     });
   }
 
-  function openFormConta() {
+  function openFormConta(contaExistente) {
+    const editando = !!contaExistente;
     App.openModal(`
-      <h3 class="font-heading font-bold text-xl text-forest-800 mb-4">Nova conta</h3>
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-4">${editando ? 'Editar' : 'Nova'} conta</h3>
+      ${editando ? '<p class="text-sm text-ink/60 mb-4">Ajuste o saldo inicial se o valor com que a conta começou não estava certo — isso corrige o "Saldo atual" sem mexer nos lançamentos já lançados.</p>' : ''}
       <form id="form-conta" class="space-y-3">
         <div>
           <label class="label">Nome</label>
-          <input type="text" id="ctf-nome" class="input" required placeholder="Ex: Conta PJ - Banco X" autofocus>
+          <input type="text" id="ctf-nome" class="input" required placeholder="Ex: Conta PJ - Banco X" autofocus value="${editando ? Utils.escapeHtml(contaExistente.nome) : ''}">
         </div>
         <div>
           <label class="label">Saldo inicial (R$)</label>
-          <input type="text" inputmode="decimal" id="ctf-saldo" class="input" placeholder="0,00">
+          <input type="text" inputmode="decimal" id="ctf-saldo" class="input" placeholder="0,00" value="${editando ? String(contaExistente.saldoInicial).replace('.', ',') : ''}">
         </div>
         <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn-primary flex-1">Adicionar</button>
+          <button type="submit" class="btn-primary flex-1">${editando ? 'Salvar alterações' : 'Adicionar'}</button>
           <button type="button" id="btn-cancel-conta" class="btn-secondary">Cancelar</button>
         </div>
       </form>
@@ -212,8 +223,13 @@ const ViewCategorias = (() => {
       const nome = document.getElementById('ctf-nome').value.trim();
       if (!nome) return;
       const saldo = Utils.parseCurrency(document.getElementById('ctf-saldo').value);
-      Store.addConta(nome, saldo);
-      App.toast('Conta adicionada!');
+      if (editando) {
+        Store.updateConta(contaExistente.id, { nome, saldoInicial: saldo });
+        App.toast('Conta atualizada!');
+      } else {
+        Store.addConta(nome, saldo);
+        App.toast('Conta adicionada!');
+      }
       App.closeModal();
       App.refreshCurrentView();
     });
