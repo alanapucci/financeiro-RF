@@ -133,8 +133,8 @@ const ViewResumo = (() => {
       data: {
         labels: meses.map(m => Utils.monthLabel(m + '-01')),
         datasets: [
-          { label: 'Receitas', data: receitasPorMes, backgroundColor: '#67754F', borderRadius: 4 },
-          { label: 'Despesas', data: despesasPorMes, backgroundColor: '#B15C5C', borderRadius: 4 },
+          { label: 'Receitas', data: receitasPorMes, backgroundColor: '#7E623C', borderRadius: 4 },
+          { label: 'Despesas', data: despesasPorMes, backgroundColor: '#A85D45', borderRadius: 4 },
         ],
       },
       options: {
@@ -153,7 +153,7 @@ const ViewResumo = (() => {
     });
     const labels = Object.keys(porCategoria);
     const dados = Object.values(porCategoria);
-    const cores = ['#67754F', '#919D71', '#B15C5C', '#CFC4A8', '#3A412E', '#7E8A60', '#9C4C4C', '#F1EAD7', '#576343', '#6A754F'];
+    const cores = ['#7E623C', '#9C8259', '#A85D45', '#D9C6AE', '#493720', '#8A7049', '#8F4A35', '#EFE2D3', '#6B5230', '#75603D'];
 
     if (chartCategorias) chartCategorias.destroy();
     const ctxCat = document.getElementById('chart-categorias');

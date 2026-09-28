@@ -1,6 +1,6 @@
-# Financeiro do Brechó
+# Financeiro RF Circula Bags
 
-App simples de controle financeiro para o dia a dia do brechó: lançamentos, conciliação bancária, contas a pagar/receber com parcelas e relatórios. Feito para substituir o Nibo sem mensalidade — roda direto no navegador, sem precisar instalar nada.
+App simples de controle financeiro para o dia a dia da Circula Bags: lançamentos, conciliação bancária, contas a pagar/receber com parcelas e relatórios. Feito para substituir o Nibo sem mensalidade — roda direto no navegador, sem precisar instalar nada.
 
 ## Como usar
 

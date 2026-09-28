@@ -88,7 +88,7 @@ const App = (() => {
       document.getElementById('btn-export').addEventListener('click', () => {
         const json = Store.exportJson();
         const stamp = Utils.todayIso();
-        Utils.downloadFile(`financeiro-brecho-backup-${stamp}.json`, json, 'application/json');
+        Utils.downloadFile(`circula-bags-backup-${stamp}.json`, json, 'application/json');
         toast('Backup exportado!');
       });
       document.getElementById('input-import').addEventListener('change', (e) => {
