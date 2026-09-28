@@ -120,9 +120,27 @@ const App = (() => {
     document.getElementById('btn-backup-mobile').addEventListener('click', open);
   }
 
+  function atualizarBotaoOcultar() {
+    const label = Utils.valoresEstaoOcultos() ? '🙈 Mostrar valores' : '👁️ Ocultar valores';
+    document.getElementById('btn-ocultar-valores').textContent = label;
+    document.getElementById('btn-ocultar-valores-mobile').textContent = label;
+  }
+
+  function setupOcultarValores() {
+    atualizarBotaoOcultar();
+    const toggle = () => {
+      Utils.toggleValoresOcultos();
+      atualizarBotaoOcultar();
+      refreshCurrentView();
+    };
+    document.getElementById('btn-ocultar-valores').addEventListener('click', toggle);
+    document.getElementById('btn-ocultar-valores-mobile').addEventListener('click', toggle);
+  }
+
   function init() {
     setupNav();
     setupBackup();
+    setupOcultarValores();
     renderView('resumo');
   }
 

@@ -28,6 +28,7 @@ const ViewAnual = (() => {
   }
 
   function fmtNum(v) {
+    if (Utils.valoresEstaoOcultos()) return v ? '••••' : '<span class="text-ink/30">0</span>';
     if (!v) return '<span class="text-ink/30">0</span>';
     const abs = Math.round(Math.abs(v)).toLocaleString('pt-BR');
     return v < 0 ? `<span class="text-rose-600">(${abs})</span>` : abs;

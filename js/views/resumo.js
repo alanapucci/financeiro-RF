@@ -139,8 +139,11 @@ const ViewResumo = (() => {
       },
       options: {
         responsive: true,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
-        scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v } } },
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+          tooltip: { enabled: !Utils.valoresEstaoOcultos() },
+        },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => Utils.valoresEstaoOcultos() ? '••••' : 'R$ ' + v } } },
       },
     });
 
@@ -167,7 +170,13 @@ const ViewResumo = (() => {
     chartCategorias = new Chart(ctxCat, {
       type: 'doughnut',
       data: { labels, datasets: [{ data: dados, backgroundColor: cores }] },
-      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } } },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+          tooltip: { enabled: !Utils.valoresEstaoOcultos() },
+        },
+      },
     });
   }
 

@@ -3,8 +3,20 @@ const Utils = (() => {
   const currencyFmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const dateFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
+  const OCULTAR_KEY = 'financeiro_valores_ocultos';
+  let valoresOcultos = localStorage.getItem(OCULTAR_KEY) === '1';
+
   function formatCurrency(value) {
+    if (valoresOcultos) return 'R$ ••••••';
     return currencyFmt.format(Number(value) || 0);
+  }
+  function valoresEstaoOcultos() {
+    return valoresOcultos;
+  }
+  function toggleValoresOcultos() {
+    valoresOcultos = !valoresOcultos;
+    localStorage.setItem(OCULTAR_KEY, valoresOcultos ? '1' : '0');
+    return valoresOcultos;
   }
 
   // Recebe string em formato brasileiro ("1.234,56" ou "1234,56" ou "1234.56") e devolve number.
@@ -121,7 +133,7 @@ const Utils = (() => {
   }
 
   return {
-    formatCurrency, parseCurrency, formatDate, toIsoDate, todayIso,
+    formatCurrency, valoresEstaoOcultos, toggleValoresOcultos, parseCurrency, formatDate, toIsoDate, todayIso,
     monthLabel, monthKey, addMonths, diasEntre, uid, escapeHtml, debounce, downloadFile,
     optionsCategoriasAgrupadas,
   };

@@ -56,6 +56,9 @@ Gerencie categorias de receita/despesa (já vem com sugestões para brechó: ven
 
 As categorias de despesa podem ser organizadas em **grupos** (subcategorias), como no exemplo padrão: *Custos operacionais*, *Despesas operacionais* e *Despesas pessoais* — e dentro de "Despesas pessoais" já vêm categorias como Moradia, Alimentação, Saúde, Lazer, etc. Crie quantos grupos quiser em **Categorias → + Grupo**. Os grupos aparecem como subtotal na Visão anual, igual ao painel do Nibo.
 
+### 👁️ Ocultar valores
+Botão no topo (ao lado de Backup) que mascara todos os valores em R$ do app inteiro (cards, tabelas, gráficos) com `••••`, mantendo a estrutura e os textos visíveis. Útil para mostrar o app como modelo/demonstração para outras pessoas sem expor os números reais do seu negócio. A preferência fica salva no navegador — clique de novo para mostrar os valores.
+
 ## Formato do CSV de extrato bancário
 
 O importador aceita CSV com vírgula ou ponto e vírgula como separador, e tenta identificar automaticamente qual coluna é data, qual é valor e qual é descrição. Formatos de data aceitos: `DD/MM/AAAA` ou `AAAA-MM-DD`. Valores podem usar vírgula ou ponto como separador decimal (ex: `1.234,56` ou `1234.56`). Valores negativos são tratados como saída/despesa.
