@@ -112,6 +112,17 @@ const Utils = (() => {
     };
   }
 
+  // Depois de um re-render (innerHTML), o elemento antigo é destruído e o novo nasce sem foco.
+  // Usado após render() em campos de busca para o cursor não "sumir" no meio da digitação.
+  function refocus(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      const len = el.value.length;
+      if (el.setSelectionRange) el.setSelectionRange(len, len);
+    }
+  }
+
   // Monta as <option>/<optgroup> de um <select> a partir do retorno de Store.categoriasAgrupadas().
   function optionsCategoriasAgrupadas(blocos, selectedId) {
     return blocos.map(b => {
@@ -134,7 +145,7 @@ const Utils = (() => {
 
   return {
     formatCurrency, valoresEstaoOcultos, toggleValoresOcultos, parseCurrency, formatDate, toIsoDate, todayIso,
-    monthLabel, monthKey, addMonths, diasEntre, uid, escapeHtml, debounce, downloadFile,
+    monthLabel, monthKey, addMonths, diasEntre, uid, escapeHtml, debounce, refocus, downloadFile,
     optionsCategoriasAgrupadas,
   };
 })();

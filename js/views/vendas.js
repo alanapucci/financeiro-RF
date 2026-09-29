@@ -113,7 +113,11 @@ const ViewVendas = (() => {
     document.getElementById('f-mes').addEventListener('change', e => { filtros.mes = e.target.value; render(container); });
     document.getElementById('f-fornecedora').addEventListener('change', e => { filtros.fornecedora = e.target.value; render(container); });
     document.getElementById('f-status-nf').addEventListener('change', e => { filtros.statusNf = e.target.value; render(container); });
-    document.getElementById('f-busca').addEventListener('input', Utils.debounce(e => { filtros.busca = e.target.value; render(container); }, 300));
+    document.getElementById('f-busca').addEventListener('input', Utils.debounce(e => {
+      filtros.busca = e.target.value;
+      render(container);
+      Utils.refocus('f-busca');
+    }, 300));
 
     container.querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => openForm(state.vendas.find(v => v.id === btn.dataset.edit)));

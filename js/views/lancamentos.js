@@ -86,7 +86,11 @@ const ViewLancamentos = (() => {
     document.getElementById('f-mes').addEventListener('change', e => { filtros.mes = e.target.value; render(container); });
     document.getElementById('f-tipo').addEventListener('change', e => { filtros.tipo = e.target.value; render(container); });
     document.getElementById('f-categoria').addEventListener('change', e => { filtros.categoriaId = e.target.value; render(container); });
-    document.getElementById('f-busca').addEventListener('input', Utils.debounce(e => { filtros.busca = e.target.value; render(container); }, 300));
+    document.getElementById('f-busca').addEventListener('input', Utils.debounce(e => {
+      filtros.busca = e.target.value;
+      render(container);
+      Utils.refocus('f-busca');
+    }, 300));
 
     container.querySelectorAll('[data-edit]').forEach(btn => {
       btn.addEventListener('click', () => openForm(state.lancamentos.find(l => l.id === btn.dataset.edit)));
