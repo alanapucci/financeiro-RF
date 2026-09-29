@@ -7,6 +7,7 @@ const App = (() => {
     lancamentos: ViewLancamentos,
     conciliacao: ViewConciliacao,
     contas: ViewContas,
+    pessoas: ViewPessoas,
     categorias: ViewCategorias,
   };
   let currentView = 'resumo';

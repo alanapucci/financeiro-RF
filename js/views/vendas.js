@@ -168,7 +168,10 @@ const ViewVendas = (() => {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="label">Fornecedora</label>
-            <input type="text" id="vf-fornecedora" class="input" value="${v.fornecedora ? Utils.escapeHtml(v.fornecedora) : ''}" placeholder="Nome de quem consignou">
+            <input type="text" id="vf-fornecedora" class="input" list="lista-fornecedoras" value="${v.fornecedora ? Utils.escapeHtml(v.fornecedora) : ''}" placeholder="Nome de quem consignou">
+            <datalist id="lista-fornecedoras">
+              ${Store.getState().pessoas.filter(p => p.tipo === 'fornecedor').map(p => `<option value="${Utils.escapeHtml(p.nome)}">`).join('')}
+            </datalist>
           </div>
           <div>
             <label class="label">CPF/CNPJ da fornecedora</label>
@@ -205,6 +208,16 @@ const ViewVendas = (() => {
         </div>
       </form>
     `);
+
+    const inputFornecedora = document.getElementById('vf-fornecedora');
+    inputFornecedora.addEventListener('input', () => {
+      const cadastro = Store.getState().pessoas.find(p => p.tipo === 'fornecedor' && p.nome === inputFornecedora.value);
+      if (!cadastro) return;
+      const inputDoc = document.getElementById('vf-doc');
+      const inputCep = document.getElementById('vf-cep');
+      if (cadastro.docNumero && !inputDoc.value) inputDoc.value = cadastro.docNumero;
+      if (cadastro.cep && !inputCep.value) inputCep.value = cadastro.cep;
+    });
 
     let notaEditadaManualmente = editando && v.valorNota != null;
     const inputNota = document.getElementById('vf-nota');

@@ -49,6 +49,7 @@ const Store = (() => {
       extratoImportado: [],
       vendas: [],
       regras: [],
+      pessoas: [],
       _ultimaAtualizacao: hoje,
     };
   }
@@ -80,6 +81,7 @@ const Store = (() => {
         extratoImportado: parsed.extratoImportado || [],
         vendas: parsed.vendas || [],
         regras: parsed.regras || [],
+        pessoas: parsed.pessoas || [],
       });
     } catch (e) {
       console.error('Erro ao carregar dados salvos, iniciando do zero.', e);
@@ -342,6 +344,24 @@ const Store = (() => {
     return aplicadas;
   }
 
+  // ---- Fornecedores e clientes (cadastro para emissão de nota fiscal) ----
+  function addPessoa(data) {
+    const pessoa = Object.assign({ id: Utils.uid('pessoa') }, data);
+    state.pessoas.push(pessoa);
+    persist();
+    return pessoa;
+  }
+  function updatePessoa(id, changes) {
+    const p = state.pessoas.find(p => p.id === id);
+    if (p) Object.assign(p, changes);
+    persist();
+    return p;
+  }
+  function deletePessoa(id) {
+    state.pessoas = state.pessoas.filter(p => p.id !== id);
+    persist();
+  }
+
   // ---- Vendas por consignação (registro de recebimentos, independente do financeiro) ----
   function addVenda(data) {
     const venda = Object.assign({ id: Utils.uid('venda') }, data);
@@ -385,6 +405,7 @@ const Store = (() => {
     addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
     addRegra, updateRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
+    addPessoa, updatePessoa, deletePessoa,
     addVenda, updateVenda, deleteVenda,
     exportJson, importJson, resetAll,
   };
