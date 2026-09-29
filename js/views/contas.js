@@ -91,11 +91,14 @@ const ViewContas = (() => {
           const pagas = p.parcelas.filter(pc => pc.status === 'pago').length;
           return `
           <div class="card flex items-center justify-between gap-3">
-            <div>
-              <p class="font-semibold text-sm">${Utils.escapeHtml(p.descricao)}</p>
+            <div class="min-w-0">
+              <p class="font-semibold text-sm truncate">${Utils.escapeHtml(p.descricao)}</p>
               <p class="text-xs text-ink/50">${Utils.escapeHtml(p.pessoa || '—')} · ${pagas}/${p.numParcelas} parcelas pagas · ${Utils.formatCurrency(p.valorTotal)}</p>
             </div>
-            <button class="btn-icon" data-del-parc="${p.id}" title="Excluir parcelamento inteiro">🗑️</button>
+            <span class="flex gap-1 shrink-0">
+              <button class="btn-icon" data-edit-parc="${p.id}" title="Editar">✏️</button>
+              <button class="btn-icon" data-del-parc="${p.id}" title="Excluir parcelamento inteiro">🗑️</button>
+            </span>
           </div>
         `;
         }).join('')}
@@ -103,6 +106,12 @@ const ViewContas = (() => {
     `;
 
     document.getElementById('btn-novo-parc').addEventListener('click', () => openFormParcelamento());
+    container.querySelectorAll('[data-edit-parc]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const parc = state.parcelamentos.find(p => p.id === btn.dataset.editParc);
+        openFormParcelamento(parc);
+      });
+    });
     document.getElementById('c-tipo').addEventListener('change', e => { filtroTipo = e.target.value; render(container); });
     document.getElementById('c-status').addEventListener('change', e => { filtroStatus = e.target.value; render(container); });
 
@@ -133,25 +142,28 @@ const ViewContas = (() => {
     });
   }
 
-  function openFormParcelamento() {
+  function openFormParcelamento(parcelamentoExistente) {
     const state = Store.getState();
+    const editando = !!parcelamentoExistente;
+    const p = parcelamentoExistente || {};
     App.openModal(`
-      <h3 class="font-heading font-bold text-xl text-forest-800 mb-4">Nova conta com parcelas</h3>
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-4">${editando ? 'Editar conta com parcelas' : 'Nova conta com parcelas'}</h3>
+      ${editando ? '<p class="text-sm text-ink/60 mb-4">Tipo, valor total, nº de parcelas e data não podem ser alterados aqui (as parcelas já geradas dependem deles). Para mudar isso, exclua e crie de novo.</p>' : ''}
       <form id="form-parc" class="space-y-3">
         <div>
           <label class="label">Tipo</label>
-          <select id="pf-tipo" class="input">
-            <option value="pagar">A pagar (despesa)</option>
-            <option value="receber">A receber (receita)</option>
+          <select id="pf-tipo" class="input" ${editando ? 'disabled' : ''}>
+            <option value="pagar" ${p.tipo === 'pagar' ? 'selected' : ''}>A pagar (despesa)</option>
+            <option value="receber" ${p.tipo === 'receber' ? 'selected' : ''}>A receber (receita)</option>
           </select>
         </div>
         <div>
           <label class="label">Descrição</label>
-          <input type="text" id="pf-descricao" class="input" required placeholder="Ex: Aluguel da loja, Compra de estoque...">
+          <input type="text" id="pf-descricao" class="input" required placeholder="Ex: Aluguel da loja, Compra de estoque..." value="${p.descricao ? Utils.escapeHtml(p.descricao) : ''}">
         </div>
         <div>
           <label class="label">Fornecedor / Cliente</label>
-          <input type="text" id="pf-pessoa" class="input" placeholder="Opcional">
+          <input type="text" id="pf-pessoa" class="input" placeholder="Opcional" value="${p.pessoa ? Utils.escapeHtml(p.pessoa) : ''}">
         </div>
         <div>
           <label class="label">Categoria</label>
@@ -160,19 +172,19 @@ const ViewContas = (() => {
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="label">Valor total (R$)</label>
-            <input type="text" inputmode="decimal" id="pf-valor" class="input" required placeholder="0,00">
+            <input type="text" inputmode="decimal" id="pf-valor" class="input" required placeholder="0,00" value="${editando ? String(p.valorTotal).replace('.', ',') : ''}" ${editando ? 'disabled' : ''}>
           </div>
           <div>
             <label class="label">Nº parcelas</label>
-            <input type="number" id="pf-parcelas" class="input" min="1" value="1" required>
+            <input type="number" id="pf-parcelas" class="input" min="1" value="${editando ? p.numParcelas : 1}" required ${editando ? 'disabled' : ''}>
           </div>
           <div>
             <label class="label">1ª parcela em</label>
-            <input type="date" id="pf-data" class="input" value="${Utils.todayIso()}" required>
+            <input type="date" id="pf-data" class="input" value="${editando ? p.dataPrimeiraParcela : Utils.todayIso()}" required ${editando ? 'disabled' : ''}>
           </div>
         </div>
         <div class="flex gap-2 pt-2">
-          <button type="submit" class="btn-primary flex-1">Criar</button>
+          <button type="submit" class="btn-primary flex-1">${editando ? 'Salvar alterações' : 'Criar'}</button>
           <button type="button" id="btn-cancel-parc" class="btn-secondary">Cancelar</button>
         </div>
       </form>
@@ -181,7 +193,7 @@ const ViewContas = (() => {
     function atualizarCategorias() {
       const tipo = document.getElementById('pf-tipo').value === 'pagar' ? 'despesa' : 'receita';
       const blocos = Store.categoriasAgrupadas(tipo);
-      document.getElementById('pf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(blocos);
+      document.getElementById('pf-categoria').innerHTML = Utils.optionsCategoriasAgrupadas(blocos, p.categoriaId);
     }
     atualizarCategorias();
     document.getElementById('pf-tipo').addEventListener('change', atualizarCategorias);
@@ -189,12 +201,25 @@ const ViewContas = (() => {
 
     document.getElementById('form-parc').addEventListener('submit', (e) => {
       e.preventDefault();
+      const descricao = document.getElementById('pf-descricao').value.trim();
+      if (!descricao) return;
+      if (editando) {
+        Store.updateParcelamento(parcelamentoExistente.id, {
+          descricao,
+          pessoa: document.getElementById('pf-pessoa').value.trim(),
+          categoriaId: document.getElementById('pf-categoria').value,
+        });
+        App.toast('Conta atualizada!');
+        App.closeModal();
+        App.refreshCurrentView();
+        return;
+      }
       const valorTotal = Utils.parseCurrency(document.getElementById('pf-valor').value);
       const numParcelas = parseInt(document.getElementById('pf-parcelas').value, 10);
       if (!valorTotal || valorTotal <= 0) { App.toast('Informe um valor válido.', 'error'); return; }
       if (!numParcelas || numParcelas < 1) { App.toast('Informe um número de parcelas válido.', 'error'); return; }
       Store.addParcelamento({
-        descricao: document.getElementById('pf-descricao').value.trim(),
+        descricao,
         tipo: document.getElementById('pf-tipo').value,
         pessoa: document.getElementById('pf-pessoa').value.trim(),
         categoriaId: document.getElementById('pf-categoria').value,

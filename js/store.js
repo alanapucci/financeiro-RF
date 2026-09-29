@@ -223,6 +223,26 @@ const Store = (() => {
     persist();
     return parcelamento;
   }
+  // Atualiza descrição/pessoa/categoria/conta de um parcelamento já cadastrado. Quando a descrição
+  // muda, propaga para os lançamentos já gerados (parcelas pagas), pra não ficarem desatualizados.
+  function updateParcelamento(id, { descricao, pessoa, categoriaId, contaId }) {
+    const parc = state.parcelamentos.find(p => p.id === id);
+    if (!parc) return;
+    const descricaoMudou = descricao !== undefined && descricao !== parc.descricao;
+    if (descricao !== undefined) parc.descricao = descricao;
+    if (pessoa !== undefined) parc.pessoa = pessoa;
+    if (categoriaId !== undefined) parc.categoriaId = categoriaId;
+    if (contaId !== undefined) parc.contaId = contaId;
+    if (descricaoMudou) {
+      parc.parcelas.forEach(parcela => {
+        if (!parcela.lancamentoId) return;
+        const lanc = state.lancamentos.find(l => l.id === parcela.lancamentoId);
+        if (lanc) lanc.descricao = `${parc.descricao} (${parcela.numero}/${parc.numParcelas})`;
+      });
+    }
+    persist();
+    return parc;
+  }
   function deleteParcelamento(id) {
     const parc = state.parcelamentos.find(p => p.id === id);
     if (parc) {
@@ -402,7 +422,7 @@ const Store = (() => {
     addCategoria, updateCategoria, deleteCategoria, categoriaNome, categoriasAgrupadas,
     addConta, contaNome, updateConta, deleteConta,
     addLancamento, updateLancamento, deleteLancamento,
-    addParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
+    addParcelamento, updateParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
     addRegra, updateRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
     addPessoa, updatePessoa, deletePessoa,

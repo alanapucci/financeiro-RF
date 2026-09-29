@@ -51,6 +51,8 @@ Cadastro de entradas e saídas (data, descrição, categoria, conta, valor, form
 ### 📅 Contas a pagar/receber
 Cadastre compromissos parcelados (ex: um fornecedor em 3x, um empréstimo, uma cliente pagando em 2x). O app gera as parcelas automaticamente com vencimento mensal. Ao marcar uma parcela como paga, um lançamento é criado automaticamente e vinculado a ela (pode ser estornado se necessário).
 
+Cada conta cadastrada pode ser editada (✏️ em "Parcelamentos cadastrados") para corrigir descrição, fornecedor/cliente ou categoria — tipo, valor total, nº de parcelas e data não podem ser alterados por lá, já que as parcelas já foram geradas a partir deles. Ao editar a descrição, os lançamentos já criados por parcelas pagas são atualizados automaticamente para refletir o novo texto.
+
 ### 👥 Fornecedores e clientes
 Cadastro de nome, CPF/CNPJ, telefone, e-mail, CEP/endereço e observações — para ter à mão na hora de emitir nota fiscal ou fechar repasse com uma consignante. Ao cadastrar uma fornecedora aqui, o nome dela já aparece como sugestão automática ao criar uma venda em **💰 Vendas**, preenchendo o CPF/CNPJ e CEP sozinho.
 
