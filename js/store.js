@@ -288,8 +288,12 @@ const Store = (() => {
   }
 
   // ---- Extrato importado (conciliação) ----
+  // Ignora linhas idênticas (mesma data+descrição+valor) já importadas antes, pra não duplicar
+  // lançamentos quando o mesmo extrato (ou um período sobreposto) é importado mais de uma vez.
   function addExtratoLinhas(linhas) {
-    const novas = linhas.map(l => Object.assign({ id: Utils.uid('ext'), conciliadoComLancamentoId: null }, l));
+    const jaExistentes = new Set(state.extratoImportado.map(e => `${e.data}|${e.descricao}|${e.valor}`));
+    const inedita = l => !jaExistentes.has(`${l.data}|${l.descricao}|${l.valor}`);
+    const novas = linhas.filter(inedita).map(l => Object.assign({ id: Utils.uid('ext'), conciliadoComLancamentoId: null }, l));
     state.extratoImportado.push(...novas);
     persist();
     return novas;

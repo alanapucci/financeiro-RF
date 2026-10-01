@@ -164,9 +164,14 @@ const ViewConciliacao = (() => {
       const texto = decodificarArquivo(new Uint8Array(reader.result));
       const { linhas, erros } = CsvImport.parse(texto);
       if (linhas.length > 0) {
-        Store.addExtratoLinhas(linhas);
+        const novas = Store.addExtratoLinhas(linhas);
         const aplicadas = Store.aplicarRegrasAutomaticas();
-        App.toast(`${linhas.length} linha(s) importada(s)!` + (aplicadas > 0 ? ` ${aplicadas} já categorizada(s) por regra.` : ''));
+        const ignoradas = linhas.length - novas.length;
+        App.toast(
+          `${novas.length} linha(s) importada(s)!`
+          + (ignoradas > 0 ? ` ${ignoradas} já tinham sido importadas antes (ignoradas).` : '')
+          + (aplicadas > 0 ? ` ${aplicadas} já categorizada(s) por regra.` : '')
+        );
         App.renderView('conciliacao');
       }
       if (erros.length > 0) {

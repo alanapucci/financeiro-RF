@@ -45,6 +45,7 @@ Cadastro de entradas e saídas (data, descrição, categoria, conta, valor, form
 1. Exporte o extrato do seu banco em **CSV** (a maioria dos bancos e apps de pagamento permite isso).
 2. Importe o arquivo em **Conciliação → Importar extrato (CSV)**. O app tenta identificar automaticamente as colunas de data, descrição e valor.
 3. Use **Conciliar automaticamente** para casar linhas do extrato com lançamentos existentes (mesmo valor, data com até 3 dias de diferença), ou selecione manualmente uma linha do extrato + um lançamento e clique em **Vincular selecionados**.
+   - Se você importar o mesmo extrato (ou um período que se sobrepõe a uma importação anterior) de novo, o app identifica as linhas repetidas (mesma data, descrição e valor) e as ignora — evitando lançamentos duplicados.
 4. Se uma linha do extrato não tiver lançamento correspondente, clique em ➕ para criar o lançamento diretamente a partir dela (já conciliado).
 5. **Regras de categorização automática**: clique em 🏷️ numa linha do extrato para ensinar o app — ex: todo texto contendo "LITHIUM SOFTWARE" vira uma despesa de Transporte automaticamente. Da próxima vez que esse texto aparecer no extrato (nessa importação ou nas seguintes), o app já cria e concilia o lançamento sozinho. Veja/apague regras salvas em **Regras**, no topo da tela.
 
