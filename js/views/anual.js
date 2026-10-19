@@ -104,17 +104,19 @@ const ViewAnual = (() => {
     const totalResultadoAno = totalReceitasAno - totalDespesasAno;
 
     container.innerHTML = `
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5 no-print">
         <h2 class="font-heading font-bold text-2xl text-forest-800">Visão anual</h2>
         <div class="flex items-center gap-2">
           <label class="label mb-0">Ano</label>
           <select id="input-ano" class="input w-auto">
             ${anos.map(a => `<option value="${a}" ${a === anoSelecionado ? 'selected' : ''}>${a}</option>`).join('')}
           </select>
+          <button id="btn-imprimir-anual" class="btn-secondary">🖨️ Imprimir</button>
         </div>
       </div>
 
-      <p class="text-sm text-ink/60 mb-4">Igual ao painel de acompanhamento que você usava — receitas e despesas por categoria, mês a mês.</p>
+      <h2 class="font-heading font-bold text-xl text-forest-800 mb-1 only-print">Visão anual ${anoSelecionado} — Financeiro RF Circula Bags</h2>
+      <p class="text-sm text-ink/60 mb-4 no-print">Igual ao painel de acompanhamento que você usava — receitas e despesas por categoria, mês a mês.</p>
 
       <div class="card p-0 overflow-hidden">
         <div class="table-scroll">
@@ -141,6 +143,7 @@ const ViewAnual = (() => {
       anoSelecionado = Number(e.target.value);
       render(container);
     });
+    document.getElementById('btn-imprimir-anual').addEventListener('click', () => window.print());
   }
 
   return { render };

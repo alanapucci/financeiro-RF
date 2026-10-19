@@ -78,3 +78,20 @@ table.data-table tbody tr:hover { background: rgba(239,226,211,0.5); }
 
 ::-webkit-scrollbar { height: 8px; width: 8px; }
 ::-webkit-scrollbar-thumb { background: #D9C6AE; border-radius: 8px; }
+
+.only-print { display: none; }
+
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  body { background: #fff !important; }
+  header, nav, #mobile-menu, #toast-container, .no-print { display: none !important; }
+  main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+  .only-print { display: block !important; }
+  .card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+  .table-scroll { overflow: visible !important; }
+  table.data-table { font-size: 10px; width: 100%; }
+  table.data-table thead th { position: static; background: #fff !important; border-bottom: 1px solid #999; }
+  table.data-table tbody td { border-bottom: 1px solid #ddd; padding: 0.3rem 0.4rem 0.3rem 0; }
+  table.data-table tbody tr:hover { background: none; }
+  tr { break-inside: avoid; }
+}
