@@ -10,13 +10,16 @@ const ViewLancamentos = (() => {
       .filter(l => !filtros.busca || l.descricao.toLowerCase().includes(filtros.busca.toLowerCase()))
       .sort((a, b) => b.data.localeCompare(a.data));
 
-    const totalReceitas = filtrados.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-    const totalDespesas = filtrados.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+    const totalReceitas = filtrados.filter(l => l.tipo === 'receita' && !l.transferencia).reduce((s, l) => s + l.valor, 0);
+    const totalDespesas = filtrados.filter(l => l.tipo === 'despesa' && !l.transferencia).reduce((s, l) => s + l.valor, 0);
 
     container.innerHTML = `
       <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h2 class="font-heading font-bold text-2xl text-forest-800">Lançamentos</h2>
-        <button id="btn-novo-lanc" class="btn-primary">+ Novo lançamento</button>
+        <div class="flex gap-2">
+          <button id="btn-nova-transf" class="btn-secondary">🔄 Transferência entre contas</button>
+          <button id="btn-novo-lanc" class="btn-primary">+ Novo lançamento</button>
+        </div>
       </div>
 
       <div class="card mb-4">
@@ -68,7 +71,7 @@ const ViewLancamentos = (() => {
                 <td>${Utils.escapeHtml(Store.categoriaNome(l.categoriaId))}</td>
                 <td>${Utils.escapeHtml(Store.contaNome(l.contaId))}</td>
                 <td>${Utils.escapeHtml(l.formaPagamento || '—')}</td>
-                <td class="font-semibold ${l.tipo === 'receita' ? 'text-forest-700' : 'text-rose-600'}">${l.tipo === 'receita' ? '+' : '−'} ${Utils.formatCurrency(l.valor)}</td>
+                <td class="font-semibold ${l.tipo === 'receita' ? 'text-forest-700' : 'text-rose-600'}">${l.tipo === 'receita' ? '+' : '−'} ${Utils.formatCurrency(l.valor)}${l.transferencia ? ' <span class="badge badge-gray">🔄 Transferência</span>' : ''}</td>
                 <td>${l.conciliado ? '<span class="badge badge-green">✓ Sim</span>' : '<span class="badge badge-gray">Não</span>'}</td>
                 <td class="pr-4 text-right whitespace-nowrap">
                   <button class="btn-icon" data-edit="${l.id}" title="Editar">✏️</button>
@@ -83,6 +86,7 @@ const ViewLancamentos = (() => {
     `;
 
     document.getElementById('btn-novo-lanc').addEventListener('click', () => openForm());
+    document.getElementById('btn-nova-transf').addEventListener('click', () => openFormTransferencia(container));
     document.getElementById('f-mes').addEventListener('change', e => { filtros.mes = e.target.value; render(container); });
     document.getElementById('f-tipo').addEventListener('change', e => { filtros.tipo = e.target.value; render(container); });
     document.getElementById('f-categoria').addEventListener('change', e => { filtros.categoriaId = e.target.value; render(container); });
@@ -161,6 +165,9 @@ const ViewLancamentos = (() => {
         <label class="flex items-center gap-2 text-sm text-ink/70 mt-1">
           <input type="checkbox" id="lf-conciliado" ${base.conciliado ? 'checked' : ''}> Já conciliado com o extrato bancário
         </label>
+        <label class="flex items-center gap-2 text-sm text-ink/70 mt-1">
+          <input type="checkbox" id="lf-transferencia" ${base.transferencia ? 'checked' : ''}> 🔄 É transferência entre contas (não conta como receita/despesa nos relatórios)
+        </label>
         <div class="flex gap-2 pt-2">
           <button type="submit" class="btn-primary flex-1">${editando ? 'Salvar alterações' : 'Adicionar lançamento'}</button>
           <button type="button" id="btn-cancel-lanc" class="btn-secondary">Cancelar</button>
@@ -190,6 +197,7 @@ const ViewLancamentos = (() => {
         valor,
         formaPagamento: document.getElementById('lf-forma').value,
         conciliado: document.getElementById('lf-conciliado').checked,
+        transferencia: document.getElementById('lf-transferencia').checked,
       };
       let salvo;
       if (editando) {
@@ -202,6 +210,66 @@ const ViewLancamentos = (() => {
       App.closeModal();
       App.refreshCurrentView();
       if (options.onSaved) options.onSaved(salvo);
+    });
+  }
+
+  function openFormTransferencia(container) {
+    const state = Store.getState();
+    App.openModal(`
+      <h3 class="font-heading font-bold text-xl text-forest-800 mb-2">🔄 Transferência entre contas</h3>
+      <p class="text-sm text-ink/60 mb-4">Para quando você move dinheiro entre suas próprias contas (ex: Mercado Pago → Sicredi). Cria a saída numa conta e a entrada na outra, sem contar como receita/despesa nos relatórios.</p>
+      <form id="form-transf" class="space-y-3">
+        <div>
+          <label class="label">Data</label>
+          <input type="date" id="tf-data" class="input" value="${Utils.todayIso()}" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="label">Conta de origem (saída)</label>
+            <select id="tf-origem" class="input">
+              ${state.contas.map(c => `<option value="${c.id}">${Utils.escapeHtml(c.nome)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="label">Conta de destino (entrada)</label>
+            <select id="tf-destino" class="input">
+              ${state.contas.map((c, i) => `<option value="${c.id}" ${i === 1 ? 'selected' : ''}>${Utils.escapeHtml(c.nome)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Valor (R$)</label>
+          <input type="text" inputmode="decimal" id="tf-valor" class="input" required placeholder="0,00">
+        </div>
+        <div>
+          <label class="label">Descrição (opcional)</label>
+          <input type="text" id="tf-descricao" class="input" placeholder="Ex: Repasse Mercado Pago">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="btn-primary flex-1">Registrar transferência</button>
+          <button type="button" id="btn-cancel-transf" class="btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    `);
+
+    document.getElementById('btn-cancel-transf').addEventListener('click', App.closeModal);
+    document.getElementById('form-transf').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const contaOrigemId = document.getElementById('tf-origem').value;
+      const contaDestinoId = document.getElementById('tf-destino').value;
+      if (contaOrigemId === contaDestinoId) { App.toast('Escolha contas diferentes.', 'error'); return; }
+      const valor = Utils.parseCurrency(document.getElementById('tf-valor').value);
+      if (!valor || valor <= 0) { App.toast('Informe um valor válido.', 'error'); return; }
+      Store.addTransferencia({
+        data: document.getElementById('tf-data').value,
+        contaOrigemId,
+        contaDestinoId,
+        valor,
+        descricao: document.getElementById('tf-descricao').value,
+      });
+      App.toast('Transferência registrada!');
+      App.closeModal();
+      App.refreshCurrentView();
     });
   }
 

@@ -11,9 +11,10 @@ const ViewResumo = (() => {
 
   function totaisDoMes(state, mesKey) {
     const doMes = state.lancamentos.filter(l => Utils.monthKey(l.data) === mesKey);
-    const receitas = doMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-    const despesas = doMes.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
-    return { receitas, despesas, saldo: receitas - despesas, doMes };
+    const semTransferencias = doMes.filter(l => !l.transferencia);
+    const receitas = semTransferencias.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
+    const despesas = semTransferencias.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+    return { receitas, despesas, saldo: receitas - despesas, doMes: semTransferencias };
   }
 
   function ultimosMeses(n) {

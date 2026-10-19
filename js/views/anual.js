@@ -16,7 +16,7 @@ const ViewAnual = (() => {
     const totalMensal = new Array(12).fill(0);
 
     state.lancamentos
-      .filter(l => l.tipo === tipo && Number(l.data.slice(0, 4)) === ano)
+      .filter(l => l.tipo === tipo && !l.transferencia && Number(l.data.slice(0, 4)) === ano)
       .forEach(l => {
         const mes = Number(l.data.slice(5, 7)) - 1;
         if (!porCategoria[l.categoriaId]) porCategoria[l.categoriaId] = new Array(12).fill(0);

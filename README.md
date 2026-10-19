@@ -41,6 +41,8 @@ Registro de cada venda/recebimento — cliente, peça vendida, fornecedora (com 
 ### 🧾 Lançamentos
 Cadastro de entradas e saídas (data, descrição, categoria, conta, valor, forma de pagamento). Filtros por mês, tipo e categoria, além de busca por descrição.
 
+**🔄 Transferência entre contas**: quando você move dinheiro entre suas próprias contas (ex: do Mercado Pago pra Sicredi), use o botão **🔄 Transferência entre contas** em vez de lançar uma receita e uma despesa manualmente — ele já cria os dois lados (saída na origem, entrada no destino) e marca ambos como transferência, pra não contarem como receita/despesa real nos relatórios (Resumo e Visão anual), mas continuando a atualizar o saldo de cada conta corretamente. Se já tiver um lançamento solto que na verdade é uma transferência, edite-o e marque a caixinha "É transferência entre contas".
+
 ### 🔗 Conciliação bancária
 1. Exporte o extrato do seu banco em **CSV** (a maioria dos bancos e apps de pagamento permite isso).
 2. Importe o arquivo em **Conciliação → Importar extrato (CSV)**. O app tenta identificar automaticamente as colunas de data, descrição e valor.

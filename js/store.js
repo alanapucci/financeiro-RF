@@ -195,6 +195,23 @@ const Store = (() => {
     state.lancamentos = state.lancamentos.filter(l => l.id !== id);
     persist();
   }
+  // Transferência entre contas próprias (ex: Mercado Pago -> Sicredi): cria o par despesa/receita
+  // vinculado, marcado com transferencia:true pra não contar como receita/despesa real nos relatórios.
+  function addTransferencia({ data, contaOrigemId, contaDestinoId, valor, descricao }) {
+    const grupoId = Utils.uid('transf');
+    const desc = descricao && descricao.trim() ? descricao.trim() : 'Transferência entre contas';
+    const saida = addLancamento({
+      tipo: 'despesa', data, descricao: desc, categoriaId: null,
+      contaId: contaOrigemId, valor, formaPagamento: 'Transferência',
+      transferencia: true, transferenciaRef: grupoId,
+    });
+    const entrada = addLancamento({
+      tipo: 'receita', data, descricao: desc, categoriaId: null,
+      contaId: contaDestinoId, valor, formaPagamento: 'Transferência',
+      transferencia: true, transferenciaRef: grupoId,
+    });
+    return { saida, entrada };
+  }
 
   // ---- Parcelamentos (contas a pagar/receber) ----
   function addParcelamento({ descricao, tipo, pessoa, categoriaId, contaId, valorTotal, numParcelas, dataPrimeiraParcela }) {
@@ -425,7 +442,7 @@ const Store = (() => {
     addGrupo, updateGrupo, deleteGrupo, grupoNome,
     addCategoria, updateCategoria, deleteCategoria, categoriaNome, categoriasAgrupadas,
     addConta, contaNome, updateConta, deleteConta,
-    addLancamento, updateLancamento, deleteLancamento,
+    addLancamento, updateLancamento, deleteLancamento, addTransferencia,
     addParcelamento, updateParcelamento, deleteParcelamento, pagarParcela, estornarParcela,
     addExtratoLinhas, conciliar, desconciliar, deleteExtratoLinha,
     addRegra, updateRegra, deleteRegra, encontrarRegra, aplicarRegrasAutomaticas,
