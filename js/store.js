@@ -50,6 +50,8 @@ const Store = (() => {
       vendas: [],
       regras: [],
       pessoas: [],
+      categoriasRemovidas: [],
+      gruposRemovidos: [],
       _ultimaAtualizacao: hoje,
     };
   }
@@ -65,15 +67,21 @@ const Store = (() => {
       const seed = seedData();
       // Migração: adiciona grupos/categorias novos do seed que ainda não existem nos dados salvos,
       // sem sobrescrever nada que o usuário já tenha (dados existentes sempre têm prioridade).
+      // categoriasRemovidas/gruposRemovidos guardam o que o usuário excluiu de propósito, pra essa
+      // migração não "ressuscitar" categorias padrão que ele já tinha apagado.
+      const categoriasRemovidas = parsed.categoriasRemovidas || [];
+      const gruposRemovidos = parsed.gruposRemovidos || [];
       const gruposSalvos = parsed.grupos || [];
-      const gruposNovos = seed.grupos.filter(g => !gruposSalvos.some(gs => gs.id === g.id));
+      const gruposNovos = seed.grupos.filter(g => !gruposSalvos.some(gs => gs.id === g.id) && !gruposRemovidos.includes(g.id));
       const categoriasSalvas = parsed.categorias || seed.categorias;
       const categoriasNovas = parsed.categorias
-        ? seed.categorias.filter(c => !categoriasSalvas.some(cs => cs.id === c.id))
+        ? seed.categorias.filter(c => !categoriasSalvas.some(cs => cs.id === c.id) && !categoriasRemovidas.includes(c.id))
         : [];
       return Object.assign(seed, parsed, {
         grupos: [...gruposSalvos, ...gruposNovos],
         categorias: [...categoriasSalvas, ...categoriasNovas],
+        categoriasRemovidas,
+        gruposRemovidos,
         contas: parsed.contas || seed.contas,
         formasPagamento: parsed.formasPagamento || seed.formasPagamento,
         lancamentos: parsed.lancamentos || [],
@@ -112,6 +120,7 @@ const Store = (() => {
   function deleteGrupo(id) {
     state.categorias.forEach(c => { if (c.grupoId === id) c.grupoId = null; });
     state.grupos = state.grupos.filter(g => g.id !== id);
+    if (!state.gruposRemovidos.includes(id)) state.gruposRemovidos.push(id);
     persist();
   }
   function grupoNome(id) {
@@ -133,6 +142,7 @@ const Store = (() => {
   }
   function deleteCategoria(id) {
     state.categorias = state.categorias.filter(c => c.id !== id);
+    if (!state.categoriasRemovidas.includes(id)) state.categoriasRemovidas.push(id);
     persist();
   }
   function categoriaNome(id) {
