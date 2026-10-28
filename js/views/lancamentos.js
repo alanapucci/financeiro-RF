@@ -1,5 +1,5 @@
 const ViewLancamentos = (() => {
-  let filtros = { mes: Utils.monthKey(Utils.todayIso()), tipo: '', categoriaId: '', busca: '' };
+  let filtros = { mes: Utils.monthKey(Utils.todayIso()), tipo: '', categoriaId: '', contaId: '', busca: '' };
 
   function render(container) {
     const state = Store.getState();
@@ -7,6 +7,7 @@ const ViewLancamentos = (() => {
       .filter(l => !filtros.mes || Utils.monthKey(l.data) === filtros.mes)
       .filter(l => !filtros.tipo || l.tipo === filtros.tipo)
       .filter(l => !filtros.categoriaId || l.categoriaId === filtros.categoriaId)
+      .filter(l => !filtros.contaId || l.contaId === filtros.contaId)
       .filter(l => !filtros.busca || l.descricao.toLowerCase().includes(filtros.busca.toLowerCase()))
       .sort((a, b) => b.data.localeCompare(a.data));
 
@@ -23,7 +24,7 @@ const ViewLancamentos = (() => {
       </div>
 
       <div class="card mb-4">
-        <div class="grid sm:grid-cols-4 gap-3">
+        <div class="grid sm:grid-cols-5 gap-3">
           <div>
             <label class="label">Mês</label>
             <input type="month" id="f-mes" class="input" value="${filtros.mes}">
@@ -41,6 +42,13 @@ const ViewLancamentos = (() => {
             <select id="f-categoria" class="input">
               <option value="">Todas</option>
               ${state.categorias.map(c => `<option value="${c.id}" ${filtros.categoriaId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.nome)}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="label">Conta / Banco</label>
+            <select id="f-conta" class="input">
+              <option value="">Todas</option>
+              ${state.contas.map(c => `<option value="${c.id}" ${filtros.contaId === c.id ? 'selected' : ''}>${Utils.escapeHtml(c.nome)}</option>`).join('')}
             </select>
           </div>
           <div>
@@ -90,6 +98,7 @@ const ViewLancamentos = (() => {
     document.getElementById('f-mes').addEventListener('change', e => { filtros.mes = e.target.value; render(container); });
     document.getElementById('f-tipo').addEventListener('change', e => { filtros.tipo = e.target.value; render(container); });
     document.getElementById('f-categoria').addEventListener('change', e => { filtros.categoriaId = e.target.value; render(container); });
+    document.getElementById('f-conta').addEventListener('change', e => { filtros.contaId = e.target.value; render(container); });
     document.getElementById('f-busca').addEventListener('input', Utils.debounce(e => {
       filtros.busca = e.target.value;
       render(container);
